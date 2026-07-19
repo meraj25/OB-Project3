@@ -25,9 +25,9 @@ const findProjectById = (project_id: number) => {
 
 };
 
-const findByProjectName = (project_name: string, workspace_id:number) => {
-    return prisma.projects.findFirst({
-        where:{project_name,workspace_id},
+const findByProjectName = (project_name: string) => {
+    return prisma.projects.findMany({
+        where:{project_name},
         include:{
             workspaces:true,
             issues:{
