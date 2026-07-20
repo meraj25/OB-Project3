@@ -27,49 +27,43 @@ model issue_assignees {
   @@id([issue_id, user_id])
 }
 
-model issue_comment_chain {
-  chain_id       Int            @id @default(autoincrement())
-  comment_id     Int
-  user_id        Int
-  comment        String
-  created_at     DateTime       @default(now()) @db.Timestamp(6)
-  updated_at     DateTime       @default(now()) @db.Timestamp(6)
-  issue_comments issue_comments @relation(fields: [comment_id], references: [comment_id], onDelete: NoAction, onUpdate: NoAction)
-  users          users          @relation(fields: [user_id], references: [user_id], onDelete: NoAction, onUpdate: NoAction)
-}
-
 model issue_comments {
-  comment_id          Int                   @id @default(autoincrement())
-  issue_id            Int
-  issue_comment_chain issue_comment_chain[]
-  issues              issues                @relation(fields: [issue_id], references: [issue_id], onDelete: NoAction, onUpdate: NoAction)
+  comment_id           Int                  @id @default(autoincrement())
+  chain_id             Int
+  user_id              Int
+  comment              String
+  created_at           DateTime             @default(now()) @db.Timestamp(6)
+  issue_comments_chain issue_comments_chain @relation(fields: [chain_id], references: [chain_id], onDelete: NoAction, onUpdate: NoAction)
+  users                users                @relation(fields: [user_id], references: [user_id], onDelete: NoAction, onUpdate: NoAction)
 }
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 model issues {
-  issue_id                                            Int               @id @default(autoincrement())
-  issue_name                                          String            @unique @db.VarChar(255)
-  issue_description                                   String?           @db.VarChar(255)
+  issue_id                                            Int                   @id @default(autoincrement())
+  issue_name                                          String                @unique @db.VarChar(255)
+  issue_description                                   String?               @db.VarChar(255)
   issue_reporter                                      Int
-  issue_priority                                      String            @default("Low") @db.VarChar(45)
+  issue_priority                                      String                @default("Low") @db.VarChar(45)
   parent_issue_id                                     Int?
-  created_at                                          DateTime          @default(now()) @db.Timestamp(6)
-  updated_at                                          DateTime?         @default(now()) @db.Timestamp(6)
-  issue_status                                        String            @default("To Check") @db.VarChar(45)
+  created_at                                          DateTime              @default(now()) @db.Timestamp(6)
+  updated_at                                          DateTime?             @default(now()) @db.Timestamp(6)
+  issue_status                                        String                @default("To Check") @db.VarChar(45)
   project_id                                          Int
-  block_issues_block_issues_blocked_issue_idToissues  block_issues[]    @relation("block_issues_blocked_issue_idToissues")
-  block_issues_block_issues_blocking_issue_idToissues block_issues[]    @relation("block_issues_blocking_issue_idToissues")
+  block_issues_block_issues_blocked_issue_idToissues  block_issues[]        @relation("block_issues_blocked_issue_idToissues")
+  block_issues_block_issues_blocking_issue_idToissues block_issues[]        @relation("block_issues_blocking_issue_idToissues")
   issue_assignees                                     issue_assignees[]
-  issue_comments                                      issue_comments[]
-  users                                               users             @relation(fields: [issue_reporter], references: [user_id], onDelete: NoAction, onUpdate: NoAction)
-  issues                                              issues?           @relation("issuesToissues", fields: [parent_issue_id], references: [issue_id], onDelete: NoAction, onUpdate: NoAction)
-  other_issues                                        issues[]          @relation("issuesToissues")
-  projects                                            projects          @relation(fields: [project_id], references: [project_id], onDelete: Cascade, onUpdate: NoAction)
+  issue_comments_chain                                issue_comments_chain?
+  issue_labels                                        issue_labels[]
+  users                                               users                 @relation(fields: [issue_reporter], references: [user_id], onDelete: NoAction, onUpdate: NoAction)
+  issues                                              issues?               @relation("issuesToissues", fields: [parent_issue_id], references: [issue_id], onDelete: NoAction, onUpdate: NoAction)
+  other_issues                                        issues[]              @relation("issuesToissues")
+  projects                                            projects              @relation(fields: [project_id], references: [project_id], onDelete: Cascade, onUpdate: NoAction)
 }
 
 model labels {
-  label_id   Int    @id @default(autoincrement())
-  label_name String @unique @db.VarChar(45)
+  label_id     Int            @id @default(autoincrement())
+  label_name   String         @unique @db.VarChar(45)
+  issue_labels issue_labels[]
 }
 
 model projects {
@@ -91,15 +85,15 @@ model roles {
 }
 
 model users {
-  user_id             Int                   @id @default(autoincrement())
-  user_name           String                @unique @db.VarChar(45)
-  user_email          String                @unique @db.VarChar(255)
-  user_password       String                @db.VarChar(255)
-  created_at          DateTime              @default(now()) @db.Timestamp(6)
-  issue_assignees     issue_assignees[]
-  issue_comment_chain issue_comment_chain[]
-  issues              issues[]
-  workspace_members   workspace_members[]
+  user_id           Int                 @id @default(autoincrement())
+  user_name         String              @unique @db.VarChar(45)
+  user_email        String              @unique @db.VarChar(255)
+  user_password     String              @db.VarChar(255)
+  created_at        DateTime            @default(now()) @db.Timestamp(6)
+  issue_assignees   issue_assignees[]
+  issue_comments    issue_comments[]
+  issues            issues[]
+  workspace_members workspace_members[]
 }
 
 model workspace_members {
@@ -121,4 +115,20 @@ model workspaces {
   created_at        DateTime            @default(now()) @db.Timestamp(6)
   projects          projects[]
   workspace_members workspace_members[]
+}
+
+model issue_comments_chain {
+  chain_id       Int              @id @default(autoincrement())
+  issue_id       Int              @unique
+  issue_comments issue_comments[]
+  issues         issues           @relation(fields: [issue_id], references: [issue_id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model issue_labels {
+  issue_id Int
+  label_id Int
+  issues   issues @relation(fields: [issue_id], references: [issue_id], onDelete: NoAction, onUpdate: NoAction)
+  labels   labels @relation(fields: [label_id], references: [label_id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([issue_id, label_id])
 }
