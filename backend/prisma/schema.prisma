@@ -85,15 +85,17 @@ model roles {
 }
 
 model users {
-  user_id           Int                 @id @default(autoincrement())
-  user_name         String              @unique @db.VarChar(45)
-  user_email        String              @unique @db.VarChar(255)
-  user_password     String              @db.VarChar(255)
-  created_at        DateTime            @default(now()) @db.Timestamp(6)
-  issue_assignees   issue_assignees[]
-  issue_comments    issue_comments[]
-  issues            issues[]
-  workspace_members workspace_members[]
+  user_id               Int                     @id @default(autoincrement())
+  user_name             String                  @unique @db.VarChar(45)
+  user_email            String                  @unique @db.VarChar(255)
+  user_password         String                  @db.VarChar(255)
+  created_at            DateTime                @default(now()) @db.Timestamp(6)
+  issue_assignees       issue_assignees[]
+  issue_comments        issue_comments[]
+  issues                issues[]
+  password_reset_tokens password_reset_tokens[]
+  refresh_tokens        refresh_tokens[]
+  workspace_members     workspace_members[]
 }
 
 model workspace_members {
@@ -131,4 +133,24 @@ model issue_labels {
   labels   labels @relation(fields: [label_id], references: [label_id], onDelete: NoAction, onUpdate: NoAction)
 
   @@id([issue_id, label_id])
+}
+
+model refresh_tokens {
+  token_id   Int      @id @default(autoincrement())
+  user_id    Int
+  token_hash String   @unique @db.VarChar(255)
+  expires_at DateTime @db.Timestamp(6)
+  revoked    Boolean  @default(false)
+  created_at DateTime @default(now()) @db.Timestamp(6)
+  users      users    @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model password_reset_tokens {
+  token_id   Int      @id @default(autoincrement())
+  user_id    Int
+  token_hash String   @unique
+  expires_at DateTime @db.Timestamp(6)
+  used       Boolean  @default(false)
+  created_at DateTime @default(now()) @db.Timestamp(6)
+  users      users    @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction)
 }

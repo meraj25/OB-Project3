@@ -11,13 +11,13 @@ const findUserById = (user_id : number) => {
 };
 
 const findUserByEmail = (user_email:string) => {
-    return prisma.users.findFirst({
+    return prisma.users.findUnique({
         where:{ user_email }
     })
 };
 
 const findUserByName = (user_name:string) => {
-    return prisma.users.findFirst({
+    return prisma.users.findMany({
         where:{ user_name }
     })
 };
