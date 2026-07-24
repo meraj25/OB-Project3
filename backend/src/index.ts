@@ -4,6 +4,7 @@ import {} from "./db/prisma"
 import cookieParser from "cookie-parser";
 import globalErrorHandlingMiddleware from "./middlewares/global-error-handling.middleware";
 import UserRouter from "./routes/users.route";
+import Workspace_MembersRouter from "./routes/workspace_members.route";
 
 
 
@@ -19,6 +20,7 @@ app.use(cors({origin:"http://localhost:5173",  credentials: true}));
 app.use(cookieParser());
 
 app.use('/api/users',UserRouter);
+app.use('/api/workspaces',Workspace_MembersRouter);
 
 app.use(globalErrorHandlingMiddleware);
 

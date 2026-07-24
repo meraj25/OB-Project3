@@ -19,9 +19,22 @@ const findWorkspaceByName = (workspace_name:string) => {
 };
 
 
-const createWorkspace = (data: {workspace_name: string;}) => {
-    return prisma.workspaces.create({data})
-    
+const createWorkspace = (data: {workspace_name: string, created_by:number}) => {
+    return prisma.workspaces.create({
+        data: {
+           ...data,
+           workspace_members:{
+            create:{ user_id: data.created_by, role_id:1}
+           }
+        },
+
+        include:{
+            workspace_members:{
+                include:{users:true}
+            }
+        }
+    })
+        
 };
 
 const updateWorkspace = (workspace_id: number, data: Partial<{workspace_name: string}>) => {

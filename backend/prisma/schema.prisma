@@ -1,6 +1,7 @@
 generator client {
-  provider = "prisma-client"
-  output   = "../src/generated/prisma"
+  provider        = "prisma-client"
+  output          = "../src/generated/prisma"
+  previewFeatures = ["partialIndexes"]
 }
 
 datasource db {
@@ -96,12 +97,13 @@ model users {
   password_reset_tokens password_reset_tokens[]
   refresh_tokens        refresh_tokens[]
   workspace_members     workspace_members[]
+  workspaces            workspaces[]
 }
 
 model workspace_members {
   workspace_member_id Int        @id @default(autoincrement())
   user_id             Int
-  workspace_id        Int
+  workspace_id        Int        @unique(map: "one_owner_per_workspace", where: raw("(role_id = 1)"))
   role_id             Int
   joined_at           DateTime   @default(now()) @db.Timestamp(6)
   roles               roles      @relation(fields: [role_id], references: [role_id], onUpdate: NoAction)
@@ -112,11 +114,13 @@ model workspace_members {
 }
 
 model workspaces {
-  workspace_id      Int                 @id @default(autoincrement())
-  workspace_name    String              @unique @db.VarChar(255)
-  created_at        DateTime            @default(now()) @db.Timestamp(6)
+  workspace_id      Int                @id @default(autoincrement())
+  workspace_name    String             @unique @db.VarChar(255)
+  created_at        DateTime           @default(now()) @db.Timestamp(6)
+  created_by        Int
   projects          projects[]
-  workspace_members workspace_members[]
+  workspace_members workspace_members?
+  users             users              @relation(fields: [created_by], references: [user_id], onUpdate: NoAction)
 }
 
 model issue_comments_chain {
