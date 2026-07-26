@@ -2,18 +2,56 @@ import { Prisma } from '../generated/prisma/client';
 import { prisma } from '../db/prisma'
 
 
-const findAllIssues = () => {
-    return prisma.issues.findMany({
-        include:{
-            projects:{
-                include:{workspaces:true}
+
+const findAllIssues = async (filters:{
+project_id:number
+status?:string,
+assignee?:number,
+reporter?:number,
+priority?:string,
+labels?:number[],
+page:number,
+limit:number
+
+}) => {
+
+    const {project_id,status,assignee,reporter,priority,labels,page,limit} = filters;
+
+    const where: Prisma.issuesWhereInput = {
+        project_id,
+        ...(status && {issue_status:status}),
+        ...(reporter && {issue_reporter:reporter}),
+        ...(priority && {issue_priority:priority}),
+        ...(assignee && {issue_assignees:{some:{user_id:assignee}}}),
+        ...(labels?.length && {issue_labels:{some:{label_id: {in: labels}}}})
+    } 
+
+    const [issues, totalCount] = await Promise.all([
+        prisma.issues.findMany({
+            where,
+            include:{
+                issue_assignees: {include:{users:true}},
+                issue_labels:{include:{labels:true}},
+                users:true,
+                issues:true,
+                projects:{include:{workspaces:true}},
+                block_issues_block_issues_blocking_issue_idToissues:true,
+                block_issues_block_issues_blocked_issue_idToissues:true
+
             },
-            users:true,
-            issue_assignees:{include:{users:true}},
-            issue_comments_chain:true,
-            issue_labels:{include:{labels:true}}
-        }
-    })
+
+            skip:(page-1) * limit,
+            take:limit,
+            orderBy:{issue_id:"desc"}
+        }),
+
+        prisma.issues.count({where})
+    ]);
+
+    return {issues, totalCount};
+
+
+
     
 } ;
 
@@ -33,7 +71,7 @@ const findIssueById = (issue_id: number) => {
 };
 
 const findIssueByName = (issue_name: string) => {
-    return prisma.issues.findFirst({
+    return prisma.issues.findMany({
         where: {issue_name},
         include:{
             projects:{
@@ -49,12 +87,12 @@ const findIssueByName = (issue_name: string) => {
 
 const createIssue = (data:{
     issue_name: string;
-    issue_description:string; 
+    issue_description?:string; 
     issue_reporter:number; 
     issue_priority:string;
     issue_status:string;
     project_id:number;
-    assignee_ids:number[]
+    assignee_ids?:number[]
 
      }) => {
 
@@ -69,6 +107,7 @@ const createIssue = (data:{
         },
         include: {
         users: true,
+        projects:{include:{workspaces:true}},
         issue_assignees: { include: { users: true } },
     },
 

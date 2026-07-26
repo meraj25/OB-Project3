@@ -5,6 +5,8 @@ import cookieParser from "cookie-parser";
 import globalErrorHandlingMiddleware from "./middlewares/global-error-handling.middleware";
 import UserRouter from "./routes/users.route";
 import Workspace_MembersRouter from "./routes/workspace_members.route";
+import ProjectRouter from "./routes/projects.route";
+import IssueRouter from "./routes/issues.route";
 
 
 
@@ -21,6 +23,8 @@ app.use(cookieParser());
 
 app.use('/api/users',UserRouter);
 app.use('/api/workspaces',Workspace_MembersRouter);
+app.use('/api/projects', ProjectRouter);
+app.use('/api/issues', IssueRouter);
 
 app.use(globalErrorHandlingMiddleware);
 
