@@ -11,7 +11,7 @@ import {
  import { createIssueSchema,updateIssueSchema } from "../domain/dto/createIssue.dto";
  import { findProjectById } from "../repositories/projects.repository";
 
-
+const VALID_SORT_FIELDS = ["issue_id", "issue_status", "issue_priority", "created_at"];
 
 const structured_issues = (issue:any) => ({
     ...issue,
@@ -27,13 +27,17 @@ const structured_issues = (issue:any) => ({
 
 
  const getAllIssues = async (query:{
+    
     status?:string,
     assignee?:number,
     reporter?:number,
     priority?:string,
     labels?:number[],
+    search?:string,
+    sortBy?:string,
+    sortOrder?: string,
     page?:string,
-    limit?:string
+    limit?:string,
 }, project_id:number, workspace_id:number) => {
 
     const page = Math.max(1,Number(query.page) || 1);
@@ -54,6 +58,14 @@ const structured_issues = (issue:any) => ({
         throw { status: 400, message: "Invalid status value" };
     }
 
+    const search = query.search?.trim() || undefined;
+    if (search && search.length > 200) {
+    throw { status: 400, message: "search term is too long" };
+    }
+
+    const sortBy = query.sortBy && VALID_SORT_FIELDS.includes(query.sortBy) ? query.sortBy : "issue_id";
+    const sortOrder = query.sortOrder === "asc" ? "asc" : "desc";
+
     const validPriority = ["Low","Medium","High"]
     if(query.priority && !validPriority.includes(query.priority)){
         throw { status: 400, message: "Invalid priority value" };
@@ -71,8 +83,12 @@ const structured_issues = (issue:any) => ({
         reporter,
         priority:query.priority,
         labels:query.labels,
+        search:query.search,
+        sortBy,
+        sortOrder,
         page,
-        limit
+        limit,
+       
     });
 
     return {

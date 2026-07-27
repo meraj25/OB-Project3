@@ -11,11 +11,14 @@ reporter?:number,
 priority?:string,
 labels?:number[],
 page:number,
-limit:number
+limit:number,
+search:string,
+sortBy?: string,
+sortOrder?: "asc" | "desc",
 
 }) => {
 
-    const {project_id,status,assignee,reporter,priority,labels,page,limit} = filters;
+    const {project_id,status,assignee,reporter,priority,labels,page,limit,search,sortBy,sortOrder} = filters;
 
     const where: Prisma.issuesWhereInput = {
         project_id,
@@ -24,6 +27,12 @@ limit:number
         ...(priority && {issue_priority:priority}),
         ...(assignee && {issue_assignees:{some:{user_id:assignee}}}),
         ...(labels?.length && {issue_labels:{some:{label_id: {in: labels}}}})
+        ...(search && {
+            OR:[
+                {issue_name:{contains:search, mode:"insensitive"}},
+                {issue_description:{contains:search,mode:"insensitive"}},
+            ]
+        })
     } 
 
     const [issues, totalCount] = await Promise.all([
@@ -42,7 +51,7 @@ limit:number
 
             skip:(page-1) * limit,
             take:limit,
-            orderBy:{issue_id:"desc"}
+            orderBy:{[sortBy ?? "issue_id"]: sortOrder ?? "desc"},
         }),
 
         prisma.issues.count({where})
