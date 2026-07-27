@@ -22,8 +22,8 @@ model block_issues {
 model issue_assignees {
   issue_id Int
   user_id  Int
-  issues   issues @relation(fields: [issue_id], references: [issue_id], onDelete: NoAction, onUpdate: NoAction)
-  users    users  @relation(fields: [user_id], references: [user_id], onDelete: NoAction, onUpdate: NoAction)
+  issues   issues @relation(fields: [issue_id], references: [issue_id], onDelete: Cascade, onUpdate: NoAction)
+  users    users  @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction)
 
   @@id([issue_id, user_id])
 }

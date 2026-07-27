@@ -1,8 +1,9 @@
 import {prisma} from "../db/prisma"
 
 
-const findAllProjects = () => {
+const findAllProjectsByWorkspace = (workspace_id:number) => {
     return prisma.projects.findMany({
+        where:{workspace_id},
         include:{workspaces: true,
                  issues:{
                     include:{users:true},
@@ -61,7 +62,7 @@ const deleteProject = (project_id:number) => {
 };
 
 export {
-    findAllProjects,
+    findAllProjectsByWorkspace,
     findByProjectName,
     findProjectById,
     createProject,

@@ -4,6 +4,7 @@ import { permissions , Action} from "../domain/permissions";
 
 
 const attachPermissions = async (req:Request, res:Response, next:NextFunction) => {
+  
 
     const user_id = req.user?.user_id;
     const workspace_id = Number(req.params.workspace_id)
