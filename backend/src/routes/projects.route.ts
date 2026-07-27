@@ -13,7 +13,7 @@ import { attachPermissions } from "../middlewares/permission.middleware";
 const ProjectRouter = express.Router();
 
 ProjectRouter
-    .route("workspace/:workspace_id")
+    .route("/workspace/:workspace_id")
     .get(
         validateToken,
         attachPermissions,
@@ -21,7 +21,7 @@ ProjectRouter
     );
 
 ProjectRouter
-    .route("workspace/:workspace_id/project/:project_id")
+    .route("/workspace/:workspace_id/project/:project_id")
     .get(
         validateToken,
         attachPermissions,
@@ -29,7 +29,7 @@ ProjectRouter
     );
 
 ProjectRouter
-    .route("/workspace/:workspace_id/create")
+    .route("/workspace/:workspace_id/project/create")
     .post(
         validateToken,
         attachPermissions,

@@ -13,28 +13,28 @@ import { attachPermissions } from "../middlewares/permission.middleware";
 const IssueRouter = express.Router();
 
 IssueRouter
-    .route("/workspaces/:workspace_id/projects/:project_id/issues")
-    .get(validateToken,attachPermissions,requireAction,GetAllIssues)
+    .route("/workspace/:workspace_id/project/:project_id/issues")
+    .get(validateToken,attachPermissions,GetAllIssues)
 
 IssueRouter
-    .route("/workspaces/:workspace_id/projects/:project_id/issues/:issue_id")
-    .get(validateToken,attachPermissions,requireAction,GetIssueById)
+    .route("/workspace/:workspace_id/project/:project_id/issue/:issue_id")
+    .get(validateToken,attachPermissions,GetIssueById)
 
 IssueRouter
-    .route("/workspaces/:workspace_id/projects/:project_id/issues/name/:issue_name")
-    .get(validateToken,attachPermissions,requireAction,GetIssueByName)
+    .route("/workspace/:workspace_id/project/:project_id/issue/name/:issue_name")
+    .get(validateToken,attachPermissions,GetIssueByName)
 
 IssueRouter
-    .route("/workspaces/:workspace_id/projects/:project_id/issues")
+    .route("/workspace/:workspace_id/project/:project_id/issue/create")
     .post(validateToken,attachPermissions,requireAction("issue:create"),CreateIssueController)
 
 IssueRouter
-    .route("/workspaces/:workspace_id/projects/:project_id/issues/:issue_id")
+    .route("/workspace/:workspace_id/project/:project_id/issue/:issue_id")
     .post(validateToken,attachPermissions,requireAction("issue:update"),UpdateIssueController)
 
 IssueRouter
-    .route("/workspaces/:workspace_id/projects/:project_id/issues/:issue_id")
-    .post(validateToken,attachPermissions,requireAction("issue:delete"),DeleteIssueController)
+    .route("/workspace/:workspace_id/project/:project_id/issue/:issue_id")
+    .delete(validateToken,attachPermissions,requireAction("issue:delete"),DeleteIssueController)
 
 
 export default IssueRouter;

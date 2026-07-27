@@ -26,7 +26,7 @@ const getWorkspaceById = async (workspace_id: number) => {
     return workspace;
 };
 
-const CreateWorkspace = async (data:{workspace_name:string}) => {
+const CreateWorkspace = async (data:{workspace_name:string, created_by:number}) => {
 
     const workspace = await  createWorkspace(data)
     return workspace;

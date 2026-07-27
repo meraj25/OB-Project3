@@ -71,9 +71,13 @@ const CreateIssueController = async (req:Request, res:Response, next:NextFunctio
 
         const project_id = Number(req.params.project_id)
         const workspace_id = Number(req.params.workspace_id)
+
+        if (isNaN(project_id) || isNaN(workspace_id)) {
+            throw new ValidationError("Invalid project or workspace id");
+        }
         const data = req.body
 
-        const issue = await CreateIssue({project_id, ...data}, workspace_id)
+        const issue = await CreateIssue({ ...data, project_id}, workspace_id)
         res.status(201).json(issue)
 
     }catch(error){
