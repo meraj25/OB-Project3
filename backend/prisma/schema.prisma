@@ -26,6 +26,7 @@ model issue_assignees {
   users    users  @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction)
 
   @@id([issue_id, user_id])
+  @@index([user_id], map: "idx_issue_assignees_user_id")
 }
 
 model issue_comments {
@@ -59,6 +60,9 @@ model issues {
   issues                                              issues?               @relation("issuesToissues", fields: [parent_issue_id], references: [issue_id], onDelete: NoAction, onUpdate: NoAction)
   other_issues                                        issues[]              @relation("issuesToissues")
   projects                                            projects              @relation(fields: [project_id], references: [project_id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([issue_priority], map: "idx_issues_priority")
+  @@index([issue_status], map: "idx_issues_status")
 }
 
 model labels {
@@ -137,6 +141,7 @@ model issue_labels {
   labels   labels @relation(fields: [label_id], references: [label_id], onDelete: NoAction, onUpdate: NoAction)
 
   @@id([issue_id, label_id])
+  @@index([label_id], map: "idx_issue_labels_label_id")
 }
 
 model refresh_tokens {
