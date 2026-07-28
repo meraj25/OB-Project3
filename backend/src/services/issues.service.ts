@@ -4,7 +4,8 @@ import {
     findIssueByName,
     createIssue,
     updateIssue,
-    deleteIssue
+    deleteIssue,
+    findIssueSubtree
  } from "../repositories/issues.repository";
  import ValidationError from "../domain/errors/validation-error";
  import NotFoundError from "../domain/errors/not-found-error";
@@ -199,13 +200,23 @@ const structured_issues = (issue:any) => ({
 
     }
 
+    const getIssueSubtree = async (issue_id: number, project_id: number, workspace_id: number) => {
+    const issue = await findIssueById(issue_id);
+    if (!issue || issue.project_id !== project_id || issue.projects.workspace_id !== workspace_id) {
+        throw new NotFoundError("issue not found!");
+    }
+
+    return findIssueSubtree(issue_id);
+};
+
 export {
     getAllIssues,
     getIssueById,
     getIssueByName,
     CreateIssue,
     UpdateIssue,
-    DeleteIssue
+    DeleteIssue,
+    getIssueSubtree
 }
 
 

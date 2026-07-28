@@ -5,7 +5,8 @@ import {
     GetIssueByName,
     CreateIssueController,
     UpdateIssueController,
-    DeleteIssueController
+    DeleteIssueController,
+    GetIssueSubtree
 } from "../controllers/issues.controller";
 import { validateToken } from "../middlewares/JWT.middleware";
 import { requireAction } from "../middlewares/requireAction.middleware";
@@ -35,6 +36,9 @@ IssueRouter
 IssueRouter
     .route("/workspace/:workspace_id/project/:project_id/issue/:issue_id")
     .delete(validateToken,attachPermissions,requireAction("issue:delete"),DeleteIssueController)
+IssueRouter
+    .route("/workspace/:workspace_id/project/:project_id/issue/:issue_id/subtree")
+    .get(validateToken, attachPermissions, GetIssueSubtree);
 
 
 export default IssueRouter;

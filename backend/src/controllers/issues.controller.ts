@@ -5,7 +5,8 @@ import {
     getIssueByName,
     CreateIssue,
     UpdateIssue,
-    DeleteIssue
+    DeleteIssue,
+    getIssueSubtree
  } from "../services/issues.service";
 import ValidationError from "../domain/errors/validation-error";
 
@@ -119,11 +120,30 @@ const DeleteIssueController = async (req:Request, res:Response, next:NextFunctio
     }
 };
 
+const GetIssueSubtree = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const issue_id = Number(req.params.issue_id);
+        const project_id = Number(req.params.project_id);
+        const workspace_id = Number(req.params.workspace_id);
+
+        if (isNaN(issue_id) || isNaN(project_id) || isNaN(workspace_id)) {
+            throw new ValidationError("Invalid id");
+        }
+
+        const tree = await getIssueSubtree(issue_id, project_id, workspace_id);
+        res.status(200).json(tree);
+
+    } catch (error) {
+        next(error);
+    }
+};
+
 export {
     GetAllIssues,
     GetIssueById,
     GetIssueByName,
     CreateIssueController,
     UpdateIssueController,
-    DeleteIssueController
+    DeleteIssueController,
+    GetIssueSubtree
 }
