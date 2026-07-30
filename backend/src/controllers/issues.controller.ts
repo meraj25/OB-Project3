@@ -8,7 +8,10 @@ import {
     DeleteIssue,
     getIssueSubtree
  } from "../services/issues.service";
+ import { findProjectById } from "../repositories/projects.repository";
 import ValidationError from "../domain/errors/validation-error";
+import NotFoundError from "../domain/errors/not-found-error";
+import {prisma} from "../db/prisma"
 
 const GetAllIssues = async (req:Request, res:Response,next:NextFunction) => {
     try{
@@ -138,6 +141,51 @@ const GetIssueSubtree = async (req: Request, res: Response, next: NextFunction) 
     }
 };
 
+const ExportIssuesCSV = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const project_id = Number(req.params.project_id);
+        const workspace_id = Number(req.params.workspace_id);
+
+        if (isNaN(project_id) || isNaN(workspace_id)) {
+            throw new ValidationError("Invalid id");
+        }
+
+        const project = await findProjectById(project_id);
+        if (!project || project.workspace_id !== workspace_id) {
+            throw new NotFoundError("Project not found");
+        }
+
+        res.setHeader("Content-Type", "text/csv");
+        res.setHeader("Content-Disposition", `attachment; filename="issues.csv"`);
+        res.write("issue_id,issue_name,issue_status,issue_priority\n");
+
+        const BATCH_SIZE = 500;
+        let cursor: number | undefined;
+
+        while (true) {
+            const batch: any[] = await prisma.issues.findMany({
+                where: { project_id },
+                take: BATCH_SIZE,
+                ...(cursor && { skip: 1, cursor: { issue_id: cursor } }),
+                orderBy: { issue_id: "asc" },
+            });
+
+            if (batch.length === 0) break;
+
+            for (const issue of batch) {
+                res.write(`${issue.issue_id},"${issue.issue_name}",${issue.issue_status},${issue.issue_priority}\n`);
+            }
+
+            cursor = batch[batch.length - 1].issue_id;
+            if (batch.length < BATCH_SIZE) break;
+        }
+
+        res.end();
+    } catch (error) {
+        next(error);
+    }
+};
+
 export {
     GetAllIssues,
     GetIssueById,
@@ -145,5 +193,6 @@ export {
     CreateIssueController,
     UpdateIssueController,
     DeleteIssueController,
-    GetIssueSubtree
+    GetIssueSubtree,
+    ExportIssuesCSV
 }

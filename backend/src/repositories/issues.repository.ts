@@ -169,6 +169,16 @@ const findIssueSubtree = async (issue_id: number) => {
     `;
 };
 
+const findIssueWithPeople = (issue_id: number) => {
+    return prisma.issues.findUnique({
+        where: { issue_id },
+        include: {
+            users: true,
+            issue_assignees: { include: { users: true } }, 
+        }
+    });
+};
+
 export {
     findAllIssues,
     findIssueById,
@@ -176,6 +186,7 @@ export {
     createIssue,
     updateIssue,
     deleteIssue,
-    findIssueSubtree
+    findIssueSubtree,
+    findIssueWithPeople
 } 
 
