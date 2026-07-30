@@ -43,7 +43,7 @@ IssueRouter
     .get(validateToken, attachPermissions, GetIssueSubtree);
 
 IssueRouter
-    .route("/workspaces/:workspace_id/projects/:project_id/issues/export")
+    .route("/workspace/:workspace_id/project/:project_id/issues/export")
     .get(validateToken,attachPermissions,ExportIssuesCSV)
 
 
