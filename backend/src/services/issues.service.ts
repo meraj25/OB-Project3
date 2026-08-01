@@ -154,6 +154,7 @@ const structured_issues = (issue:any) => ({
         throw new ValidationError("validation error")
     }
 
+
     const issue = await createIssue(parsed.data)
 
     const fullIssue = await findIssueWithPeople(issue.issue_id);
