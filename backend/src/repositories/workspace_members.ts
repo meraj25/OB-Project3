@@ -1,4 +1,7 @@
 import {prisma} from "../db/prisma"
+import { SimpleCache } from "../utils/simpleCache";
+
+const membershipCache = new SimpleCache<any>();
 
 const findAllWorkspaceMembers = () => {
 
@@ -14,10 +17,21 @@ const findWorkspaceMember = (workspace_member_id:number) => {
 };
 
 const findMembership = (user_id: number, workspace_id: number) => {
-    return prisma.workspace_members.findUnique({
+
+    const key = `${user_id}:${workspace_id}`;
+    const cached = membershipCache.get(key);
+    if (cached) return cached;
+
+    const membership = prisma.workspace_members.findUnique({
         where: { user_id_workspace_id: { user_id, workspace_id } },
         include: { roles: true }
     });
+    if (membership) membershipCache.set(key, membership, 30_000);
+    return membership;
+};
+
+const invalidateMembership = (user_id: number, workspace_id: number) => {
+    membershipCache.invalidate(`${user_id}:${workspace_id}`);
 };
 
 const createWorkspaceMember = (data:{workspace_id:number,user_id:number,role_id:number}) => {
@@ -63,6 +77,7 @@ export {
     findMembership,
     updateWorkspaceMember,
     deleteWorkspaceMember,
-    findByWorkspace
+    findByWorkspace,
+    invalidateMembership
 }
 

@@ -13,6 +13,7 @@ import {
 
 import express from "express";
 import { validateToken } from "../middlewares/JWT.middleware";
+import {loginLimiter,passwordResetLimiter} from "../middlewares/rateLimiters.middleware"
 
 
 const UserRouter = express.Router();
@@ -28,7 +29,7 @@ UserRouter
       
     UserRouter
       .route("/login")
-      .post(LoginUser)
+      .post(loginLimiter,LoginUser)
 
      UserRouter
       .route("/refresh")
@@ -51,7 +52,7 @@ UserRouter
 
     UserRouter
       .route("/password_reset/request")
-      .post(RequestPasswordReset)
+      .post(passwordResetLimiter,RequestPasswordReset)
 
     UserRouter
       .route("/password_reset/confirm")

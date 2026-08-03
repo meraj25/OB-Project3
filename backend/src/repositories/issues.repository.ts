@@ -26,7 +26,7 @@ sortOrder?: "asc" | "desc",
         ...(reporter && {issue_reporter:reporter}),
         ...(priority && {issue_priority:priority}),
         ...(assignee && {issue_assignees:{some:{user_id:assignee}}}),
-        ...(labels?.length && {issue_labels:{some:{label_id: {in: labels}}}})
+        ...(labels?.length && {issue_labels:{some:{label_id: {in: labels}}}}),
         ...(search && {
             OR:[
                 {issue_name:{contains:search, mode:"insensitive"}},
@@ -147,12 +147,46 @@ const deleteIssue = (issue_id:number) => {
 
 };
 
+const findIssueSubtree = async (issue_id: number) => {
+    return prisma.$queryRaw<Array<{
+        issue_id: number,
+        issue_name: string,
+        parent_issue_id: number | null,
+        depth: number
+    }>>`
+        WITH RECURSIVE issue_tree AS (
+            SELECT issue_id, issue_name, parent_issue_id, 0 AS depth
+            FROM issues
+            WHERE issue_id = ${issue_id}
+
+            UNION ALL
+
+            SELECT i.issue_id, i.issue_name, i.parent_issue_id, it.depth + 1
+            FROM issues i
+            INNER JOIN issue_tree it ON i.parent_issue_id = it.issue_id
+        )
+        SELECT * FROM issue_tree ORDER BY depth;
+    `;
+};
+
+const findIssueWithPeople = (issue_id: number) => {
+    return prisma.issues.findUnique({
+        where: { issue_id },
+        include: {
+            users: true,
+            issue_assignees: { include: { users: true } }, 
+        }
+    });
+};
+
 export {
     findAllIssues,
     findIssueById,
     findIssueByName,
     createIssue,
     updateIssue,
-    deleteIssue
+    deleteIssue,
+    findIssueSubtree,
+    findIssueWithPeople
 } 
 

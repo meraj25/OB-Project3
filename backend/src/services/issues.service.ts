@@ -4,12 +4,15 @@ import {
     findIssueByName,
     createIssue,
     updateIssue,
-    deleteIssue
+    deleteIssue,
+    findIssueSubtree
  } from "../repositories/issues.repository";
  import ValidationError from "../domain/errors/validation-error";
  import NotFoundError from "../domain/errors/not-found-error";
  import { createIssueSchema,updateIssueSchema } from "../domain/dto/createIssue.dto";
  import { findProjectById } from "../repositories/projects.repository";
+ import { enqueueJob } from "../repositories/backgroundJobs.repository";
+ import { findIssueWithPeople } from "../repositories/issues.repository";
 
 const VALID_SORT_FIELDS = ["issue_id", "issue_status", "issue_priority", "created_at"];
 
@@ -152,6 +155,17 @@ const structured_issues = (issue:any) => ({
     }
 
     const issue = await createIssue(parsed.data)
+
+    const fullIssue = await findIssueWithPeople(issue.issue_id);
+    const recipients = getNotificationRecipients(fullIssue);
+
+     if (recipients.length > 0) {
+        await enqueueJob("issue_assigned_email", {
+            issue_id: issue.issue_id,
+            issue_name: issue.issue_name,
+            recipients,     
+        });
+    }
     return issue;
 
  };
@@ -177,7 +191,21 @@ const structured_issues = (issue:any) => ({
         throw new ValidationError("Bad request")
     }
 
-    return await updateIssue(issue_id,parsed.data)
+    const updated = await updateIssue(issue_id,parsed.data)
+
+    const fullIssue = await findIssueWithPeople(issue_id);
+    const recipients = getNotificationRecipients(fullIssue);
+
+     if (recipients.length > 0) {
+        await enqueueJob("issue_updated_email", {
+            issue_id,
+            issue_name: fullIssue.issue_name,
+            changes: parsed.data,
+            recipients,
+        });
+    }
+
+    return updated;
 
     }catch(error){
 
@@ -195,9 +223,43 @@ const structured_issues = (issue:any) => ({
         throw new NotFoundError("issue not found!");
     }
 
+    const fullIssue = await findIssueWithPeople(issue_id);
+    const recipients = getNotificationRecipients(fullIssue);
+
+    if (recipients.length > 0) {
+        await enqueueJob("issue_deleted_email", {
+            issue_id,
+            issue_name: fullIssue.issue_name,
+            recipients,
+        });
+    }
+
         return await deleteIssue(issue_id)
 
     }
+
+    const getIssueSubtree = async (issue_id: number, project_id: number, workspace_id: number) => {
+    const issue = await findIssueById(issue_id);
+    if (!issue || issue.project_id !== project_id || issue.projects.workspace_id !== workspace_id) {
+        throw new NotFoundError("issue not found!");
+    }
+
+    return findIssueSubtree(issue_id);
+};
+
+const getNotificationRecipients = (issue: any): string[] => {
+    const emails = new Set<string>();
+
+    if (issue.users?.user_email) {
+        emails.add(issue.users.user_email); 
+    }
+
+    issue.issue_assignees?.forEach((ia: any) => {
+        if (ia.users?.user_email) emails.add(ia.users.user_email);
+    });
+
+    return Array.from(emails);
+};
 
 export {
     getAllIssues,
@@ -205,7 +267,9 @@ export {
     getIssueByName,
     CreateIssue,
     UpdateIssue,
-    DeleteIssue
+    DeleteIssue,
+    getIssueSubtree,
+    getNotificationRecipients
 }
 
 
