@@ -8,7 +8,7 @@
     "forceConsistentCasingInFileNames": true,
     "strict": false,        
     "skipLibCheck": true,
-    "types": ["node"]    
+    "types": ["node" , "jest"]    
   },
   "include": ["src", "src/middlewares/JWT.ts"],
   "exclude": ["node_modules", "dist"],

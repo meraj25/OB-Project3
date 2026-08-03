@@ -33,7 +33,7 @@ IssueRouter
 
 IssueRouter
     .route("/workspace/:workspace_id/project/:project_id/issue/:issue_id")
-    .post(validateToken,attachPermissions,requireAction("issue:update"),UpdateIssueController)
+    .patch(validateToken,attachPermissions,requireAction("issue:update"),UpdateIssueController)
 
 IssueRouter
     .route("/workspace/:workspace_id/project/:project_id/issue/:issue_id")
