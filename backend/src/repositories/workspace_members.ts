@@ -56,11 +56,22 @@ const updateWorkspaceMember = (workspace_member_id:number, data: Partial<{role_i
 
 }
 
-const deleteWorkspaceMember = (workspace_member_id:number) => {
+const deleteWorkspaceMember = async (workspace_member_id:number) => {
 
-    return prisma.workspace_members.delete({
-        where:{workspace_member_id}
-    })
+    const member = await prisma.workspace_members.findUnique({
+        where: { workspace_member_id }
+    });
+    if (!member) {
+        return null; 
+    }
+
+    const deleted = await prisma.workspace_members.delete({
+        where: { workspace_member_id }
+    });
+
+    await invalidateMembership(member.user_id, member.workspace_id);
+
+    return deleted;
 
 
 };
