@@ -69,7 +69,7 @@ const loginUser = async (data:{user_email:string;user_password:string}) => {
     }
 
     const user = await findUserByEmail(data.user_email)
-    if(!data.user_email){
+    if(!user){
         throw new NotFoundError("Not found error!")
     }
 
