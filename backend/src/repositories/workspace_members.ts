@@ -1,7 +1,8 @@
 import {prisma} from "../db/prisma"
-import { SimpleCache } from "../utils/simpleCache";
+import { redis } from "../utils/redisClient";
 
-const membershipCache = new SimpleCache<any>();
+
+const CACHE_TTL_SECONDS = 30;
 
 const findAllWorkspaceMembers = () => {
 
@@ -16,22 +17,28 @@ const findWorkspaceMember = (workspace_member_id:number) => {
 
 };
 
-const findMembership = (user_id: number, workspace_id: number) => {
+const findMembership = async (user_id: number, workspace_id: number) => {
 
-    const key = `${user_id}:${workspace_id}`;
-    const cached = membershipCache.get(key);
-    if (cached) return cached;
+    const key = `membership:${user_id}:${workspace_id}`;
+    const cached = await redis.get(key);
+    if (cached) {
+        return JSON.parse(cached);
+    }
 
-    const membership = prisma.workspace_members.findUnique({
+    const membership = await prisma.workspace_members.findUnique({
         where: { user_id_workspace_id: { user_id, workspace_id } },
         include: { roles: true }
     });
-    if (membership) membershipCache.set(key, membership, 30_000);
+
+    if (membership) {
+        await redis.set(key, JSON.stringify(membership), "EX", CACHE_TTL_SECONDS);
+    }
+
     return membership;
 };
 
-const invalidateMembership = (user_id: number, workspace_id: number) => {
-    membershipCache.invalidate(`${user_id}:${workspace_id}`);
+const invalidateMembership = async (user_id: number, workspace_id: number) => {
+    await redis.del(`membership:${user_id}:${workspace_id}`);
 };
 
 const createWorkspaceMember = (data:{workspace_id:number,user_id:number,role_id:number}) => {
@@ -49,11 +56,22 @@ const updateWorkspaceMember = (workspace_member_id:number, data: Partial<{role_i
 
 }
 
-const deleteWorkspaceMember = (workspace_member_id:number) => {
+const deleteWorkspaceMember = async (workspace_member_id:number) => {
 
-    return prisma.workspace_members.delete({
-        where:{workspace_member_id}
-    })
+    const member = await prisma.workspace_members.findUnique({
+        where: { workspace_member_id }
+    });
+    if (!member) {
+        return null; 
+    }
+
+    const deleted = await prisma.workspace_members.delete({
+        where: { workspace_member_id }
+    });
+
+    await invalidateMembership(member.user_id, member.workspace_id);
+
+    return deleted;
 
 
 };
