@@ -89,7 +89,7 @@ const loginUser = async (data:{user_email:string;user_password:string}) => {
     }
 
     const accessToken = jwt.sign(
-        {user_id:matchingUser.user_id, user_email: matchingUser.user_email },
+        {user_id:matchingUser.user_id, user_name:matchingUser.user_name, user_email: matchingUser.user_email },
         process.env.JWT_SECRET as string,
         { expiresIn: "5m" }
     )

@@ -14,7 +14,7 @@ const validateToken = (req:Request, res:Response, next:NextFunction) => {
 
     try{
 
-        const decoded = jwt.verify(accessToken,process.env.JWT_SECRET as string) as { user_id: number; user_email: string;  }
+        const decoded = jwt.verify(accessToken,process.env.JWT_SECRET as string) as { user_id: number; user_name:string;user_email: string;  }
 
         req.user = decoded
         return next();

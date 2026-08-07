@@ -8,8 +8,9 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from "./ui/empty"
+import CreateWorkspaceForm from "./createWorkspace.component"
 
-export function EmptyDemo() {
+export function EmptyDemo({user}) {
   return (
     <Empty className="py-16">
       <EmptyHeader>
@@ -23,7 +24,7 @@ export function EmptyDemo() {
         </EmptyDescription>
       </EmptyHeader>
       <EmptyContent className="flex-row justify-center gap-2">
-        <Button size="lg">Create Workspace</Button>
+        <CreateWorkspaceForm user={user}/>
       </EmptyContent>
     </Empty>
   )

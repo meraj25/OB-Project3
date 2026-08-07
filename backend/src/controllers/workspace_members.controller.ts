@@ -1,12 +1,12 @@
 import { Request,Response,NextFunction } from "express";
-import { getAllWorkspaceMembers,createMember,updateMember,deleteMember } from "../services/workspace_members.service";
+import { getAllWorkspaceMembers,getWorkspaceMembersById,createMember,updateMember,deleteMember } from "../services/workspace_members.service";
 import { error } from "node:console";
 
-const GetAllWorkspaceMembers = async (req:Request,res:Response,next:NextFunction) => {
+const GetWorkspaceMembersById = async (req:Request,res:Response,next:NextFunction) => {
 
     try{
         const workspace_id = Number(req.params.workspace_id)
-        const members = await getAllWorkspaceMembers(workspace_id)
+        const members = await getWorkspaceMembersById(workspace_id)
 
         res.status(200).json(members)
 
@@ -15,6 +15,16 @@ const GetAllWorkspaceMembers = async (req:Request,res:Response,next:NextFunction
     }
 
 };
+
+const GetAllWorkspaceMembers = async (req:Request,res:Response,next:NextFunction) => {
+
+    try{
+        const members = await getAllWorkspaceMembers()
+        res.status(200).json(members)
+    }catch(error){
+        next(error)
+    }
+}
 
 const CreateMember = async (req:Request,res:Response,next:NextFunction) => {
 
@@ -66,6 +76,7 @@ const DeleteMember = async (req:Request,res:Response,next:NextFunction) => {
 
 export {
     GetAllWorkspaceMembers,
+    GetWorkspaceMembersById,    
     CreateMember,
     UpdateMember,
     DeleteMember

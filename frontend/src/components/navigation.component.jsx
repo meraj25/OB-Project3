@@ -7,7 +7,7 @@ export default function Navigation({ user }) {
 
   const [logoutUser] = useLogoutUserMutation();
 
-  
+  console.log(user)
 
   const handleLogout = async () => {
     try {
@@ -36,7 +36,7 @@ export default function Navigation({ user }) {
         {user ? (
           <div className="flex ">
             <p className="text-sm font-medium mr-5 mt-1">
-              Welcome back, {user.name}
+              Welcome back, {user.user_name}
             </p>
             <Button onClick={handleLogout}>
               Logout

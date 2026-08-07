@@ -21,7 +21,7 @@ const getAllWorkspaces = async () => {
 const getWorkspaceById = async (workspace_id: number) => {
     const workspace = await findWorkspaceById(workspace_id);
     if(!workspace){
-        throw new NotFoundError("task now found!");
+        throw new NotFoundError("workspace found!");
     }
     return workspace;
 };

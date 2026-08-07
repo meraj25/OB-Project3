@@ -55,15 +55,15 @@ export const Api = createApi({
     }), 
 
     getAllUsers: build.query({
-      query: () => '/users',
-      providesTags: (result) =>
-        result
-          ? [
-              ...result.users.map(({ id }) => ({ type: 'User', id })),
-              { type: 'User', id: 'LIST' },
-            ]
-          : [{ type: 'User', id: 'LIST' }],
-    }),
+    query: () => '/users',
+    providesTags: (result) =>
+      result
+        ? [
+            ...result.map(({ user_id }) => ({ type: 'User', id: user_id })),
+            { type: 'User', id: 'LIST' },
+          ]
+        : [{ type: 'User', id: 'LIST' }],
+}),
 
     getUserById: build.query({
       query: (userId) => `/users/${userId}`,
@@ -250,15 +250,15 @@ export const Api = createApi({
     }),
 
     getAllWorkspaces: build.query({
-        query:() => `/workspaces`,
-        providesTags: (result) =>
+    query: () => `/workspaces`,
+    providesTags: (result) =>
         result
-          ? [
-              ...result.workspaces.map(({ id }) => ({ type: 'Workspace', id })),
-              { type: 'Workspace', id: 'LIST' },
+            ? [
+                ...result.map(({ workspace_id }) => ({ type: 'Workspace', id: workspace_id })),
+                { type: 'Workspace', id: 'LIST' },
             ]
-          : [{ type: 'Workspace', id: 'LIST' }],
-    }),
+            : [{ type: 'Workspace', id: 'LIST' }],
+}),
 
     getWorkspaceById: build.query({
         query:({workspaceId}) => `/workspaces/workspace/${workspaceId}`,
@@ -266,10 +266,10 @@ export const Api = createApi({
     }),
 
     createWorkspace: build.mutation({
-        query:(workspace_name) => ({
+        query:(workspace) => ({
             url:`/workspaces/create`,
             method:"POST",
-            body:{ workspace_name },
+            body:workspace ,
         }),
 
         invalidatesTags: [{ type: 'Workspace', id: 'LIST' }],
@@ -294,7 +294,18 @@ export const Api = createApi({
     }),
 
     getAllWorkspaceMembers: build.query({
-        query:({workspaceId}) => `/workspaces/${workspaceId}/members`,
+    query: () => `/workspace_members`,
+    providesTags: (result) =>
+        result
+            ? [
+                ...result.map(({ workspace_member_id }) => ({ type: 'WorkspaceMember', id: workspace_member_id })),
+                { type: 'WorkspaceMember', id: 'LIST' },
+            ]
+            : [{ type: 'WorkspaceMember', id: 'LIST' }],
+}),
+
+    getWorkspaceMembersById: build.query({
+        query:({workspaceId}) => `/workspace_members/workspace/${workspaceId}/members`,
 
         providesTags: (result) =>
         result
@@ -307,7 +318,7 @@ export const Api = createApi({
 
     createWorkspaceMember: build.mutation({
         query:({workspaceId,body}) => ({
-            url:`/workspaces/workspace/${workspaceId}/members`,
+            url:`/workspace_members/workspace/${workspaceId}/members`,
             method:"POST",
             body:body,
         }),
@@ -316,7 +327,7 @@ export const Api = createApi({
 
     updateWorkspaceMember: build.mutation({
         query:({workspaceId,memberId,...member}) => ({
-            url:`/workspaces/${workspaceId}/member/${memberId}`,
+            url:`/workspace_members/workspace/${workspaceId}/member/${memberId}`,
             method:"PATCH",
             body:member,
         }),
@@ -325,7 +336,7 @@ export const Api = createApi({
 
     deleteWorkspaceMember: build.mutation({
         query:({workspaceId,memberId}) => ({
-            url:`/workspaces/${workspaceId}/member/${memberId}`,
+            url:`/workspace_members/workspace/${workspaceId}/member/${memberId}`,
             method:"DELETE",
         }),
 
@@ -401,6 +412,7 @@ export const {
     useUpdateWorkspaceMutation,
     useDeleteWorkspaceMutation,
     useGetAllWorkspaceMembersQuery,
+    useGetWorkspaceMembersByIdQuery,
     useCreateWorkspaceMemberMutation,
     useUpdateWorkspaceMemberMutation,
     useDeleteWorkspaceMemberMutation,
