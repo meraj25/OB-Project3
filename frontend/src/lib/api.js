@@ -11,7 +11,7 @@ const baseQueryWithReauth = async (args , api , extraOptions) => {
 
   let result = await baseQuery(args , api , extraOptions);
 
-   if (result.error?.status === 401) {
+   if (result.error?.status === 401 || result.error?.status === 403) {
     if (!refreshPromise) {
 
        refreshPromise = baseQuery(
@@ -160,9 +160,9 @@ export const Api = createApi({
 
       },
       providesTags: (result) =>
-        result
+        result?.data
           ? [
-              ...result.issues.map(({ id }) => ({ type: 'Issue', id })),
+              ...result.data.map(({ issue_id }) => ({ type: 'Issue', id: issue_id })),
               { type: 'Issue', id: 'LIST' },
             ]
           : [{ type: 'Issue', id: 'LIST' }],
@@ -205,12 +205,12 @@ export const Api = createApi({
     }),
 
     getAllProjects: build.query({
-        query:({workspaceId}) => `/projects/workspace/${workspaceId}/projects`,
+        query:({workspaceId}) => `/projects/workspace/${workspaceId}`,
 
         providesTags: (result) =>
         result
           ? [
-              ...result.projects.map(({ id }) => ({ type: 'Project', id })),
+              ...result.map(({ project_id }) => ({ type: 'Project', id: project_id })),
               { type: 'Project', id: 'LIST' },
             ]
           : [{ type: 'Project', id: 'LIST' }],
