@@ -6,6 +6,8 @@ import { store } from './lib/store'
 import { Provider } from 'react-redux'
 import SignupPage from './pages/register.page'
 import LoginPage from './pages/login.page'
+import ProjectsPage from './pages/projects.page'
+import IssuesPage from './pages/issues.page'
 import Home from './pages/home.page'
 
 createRoot(document.getElementById('root')).render(
@@ -16,6 +18,10 @@ createRoot(document.getElementById('root')).render(
       <Route path='/' element={<Home/>}/>
       <Route path='/register' element={<SignupPage/>}/>
       <Route path='/login' element={<LoginPage/>}/>
+
+      <Route path='/workspaces/:workspace_id/projects' element={<ProjectsPage />} />
+      <Route path="/workspaces/:workspace_id/projects/:project_id/issues" element={<IssuesPage />} />
+
     </Routes>
     
     </BrowserRouter>

@@ -1,9 +1,13 @@
 import { prisma } from '../db/prisma'
 
 
-const findAllBlockedIssues = () => {
-
-    return prisma.block_issues.findMany();
+const findAllBlockedIssues = (where?: { blocked_issue_id?: number; blocking_issue_id?: number }) => {
+    return prisma.block_issues.findMany({
+        where,
+        include: {
+            issues_block_issues_blocking_issue_idToissues: { select: { issue_id: true, issue_status: true } },
+        },
+    });
 };
 
 const findBlockedIssueById = (blocked_issue_id:number, blocking_issue_id: number) => {

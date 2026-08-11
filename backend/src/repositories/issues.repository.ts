@@ -101,26 +101,40 @@ const createIssue = (data:{
     issue_priority:string;
     issue_status:string;
     project_id:number;
+    parent_issue_id?:number;
     assignee_ids?:number[]
 
      }) => {
 
-        const {assignee_ids, ...issueData} = data
+        const {assignee_ids,parent_issue_id, ...issueData} = data
 
-    return prisma.issues.create({
-        data:{...issueData,
-            issue_assignees:assignee_ids?.length?
-            {
-                create: assignee_ids.map((user_id) => ({user_id}))
-            }: undefined,
-        },
-        include: {
-        users: true,
-        projects:{include:{workspaces:true}},
-        issue_assignees: { include: { users: true } },
-    },
+    return prisma.$transaction(async (tx) => {
+        const issue = await tx.issues.create({
+            data: {
+                ...issueData,
+                parent_issue_id,
+                issue_assignees: assignee_ids?.length
+                    ? { create: assignee_ids.map((user_id) => ({ user_id })) }
+                    : undefined,
+            },
+            include: {
+                users: true,
+                projects: { include: { workspaces: true } },
+                issue_assignees: { include: { users: true } },
+            },
+        });
 
-    })
+        if (parent_issue_id) {
+            await tx.block_issues.create({
+                data: {
+                    blocking_issue_id: issue.issue_id,
+                    blocked_issue_id: parent_issue_id,
+                },
+            });
+        }
+
+        return issue;
+    });
 };
 
 

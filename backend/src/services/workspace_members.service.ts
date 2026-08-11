@@ -32,7 +32,7 @@ const createMember = async (data:{workspace_id:number;user_id:number;role_id:num
 
    
     if (!data.user_id || !data.role_id) {
-        throw new ValidationError("Email and role are required");
+        throw new ValidationError("User and role are required");
     }
 
     if (data.role_id === 1) {

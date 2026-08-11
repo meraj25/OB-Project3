@@ -8,6 +8,7 @@ import {
   CardHeader,
   CardTitle,
 } from "./ui/card";
+import { Button } from "./ui/button";
 import {
   Dialog,
   DialogClose,
@@ -21,52 +22,48 @@ import {
 import { Field, FieldGroup } from "./ui/field";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
-import {
-  useGetAllUsersQuery,
-  useGetAllWorkspaceMembersQuery,
-  useUpdateWorkspaceMutation,
-  useDeleteWorkspaceMutation,
-} from "@/lib/api";
 import { useNavigate } from "react-router";
-import { Button } from "./ui/button";
+import {
+  useGetAllWorkspaceMembersQuery,
+  useUpdateProjectMutation,
+  useDeleteProjectMutation
 
-const OWNER_ROLE_ID = 1;
+} from "@/lib/api";
 
-export function WorkspaceCard({ workspace, user }) {
+const ALLOWED_ROLE_IDS = [1, 2];
+
+export function ProjectCard({ project, user, workspaceId }) {
   const navigate = useNavigate();
-  const { data: users = [] } = useGetAllUsersQuery();
   const { data: workspaceMembers = [] } = useGetAllWorkspaceMembersQuery();
-  const [updateWorkspace, { isLoading: isUpdating }] = useUpdateWorkspaceMutation();
-  const [deleteWorkspace, { isLoading: isDeleting }] = useDeleteWorkspaceMutation();
+  const [updateProject, { isLoading: isUpdating }] = useUpdateProjectMutation();
+  const [deleteProject, { isLoading: isDeleting }] = useDeleteProjectMutation();
 
-  const { workspace_name, created_at, created_by, workspace_id } = workspace;
-
-  const creator = users.find((u) => u.user_id === created_by);
+  const { project_id, project_name, created_at, updated_at, issues } = project;
 
   const myMembership = workspaceMembers.find(
-    (m) => m.user_id === user?.user_id && m.workspace_id === workspace_id
+    (m) => m.user_id === user?.user_id && m.workspace_id === workspaceId
   );
-  const isCreator = created_by === user?.user_id;
-  const isOwnerRole = myMembership?.role_id === OWNER_ROLE_ID;
-  const canManageWorkspace = isCreator && isOwnerRole;
+  const canManageProject = ALLOWED_ROLE_IDS.includes(myMembership?.role_id);
 
   const [isEditOpen, setIsEditOpen] = useState(false);
-  const [editName, setEditName] = useState(workspace_name);
+  const [editName, setEditName] = useState(project_name);
   const [editError, setEditError] = useState("");
   const [deleteError, setDeleteError] = useState("");
 
-  const formattedDate = new Date(created_at).toLocaleDateString(undefined, {
+  const formattedCreatedDate = new Date(created_at).toLocaleDateString(undefined, {
     year: "numeric",
     month: "short",
     day: "numeric",
   });
-  const formattedTime = new Date(created_at).toLocaleTimeString(undefined, {
-    hour: "2-digit",
-    minute: "2-digit",
+  const formattedUpdatedDate = new Date(updated_at).toLocaleDateString(undefined, {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
   });
+  const issueCount = Array.isArray(issues) ? issues.length : null;
 
   const handleViewClick = () => {
-    navigate(`/workspaces/${workspace_id}/projects`);
+    navigate(`/workspaces/${workspaceId}/projects/${project_id}/issues`);
   };
 
   const handleEditSubmit = async (e) => {
@@ -74,12 +71,12 @@ export function WorkspaceCard({ workspace, user }) {
     setEditError("");
 
     if (!editName.trim()) {
-      setEditError("Workspace name is required.");
+      setEditError("Project name is required.");
       return;
     }
 
     try {
-      await updateWorkspace({ workspaceId: workspace_id, workspace_name: editName }).unwrap();
+      await updateProject({ workspaceId, projectId: project_id, project_name: editName }).unwrap();
       setIsEditOpen(false);
     } catch {
       setEditError("Couldn't save changes. Please try again.");
@@ -89,50 +86,51 @@ export function WorkspaceCard({ workspace, user }) {
   const handleDeleteClick = async () => {
     setDeleteError("");
     try {
-      await deleteWorkspace({ workspaceId: workspace_id }).unwrap();
+      await deleteProject({ workspaceId, projectId: project_id }).unwrap();
     } catch {
-      setDeleteError("Couldn't delete the workspace. Please try again.");
+      setDeleteError("Couldn't delete the project. Please try again.");
     }
   };
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{workspace_name}</CardTitle>
-        <CardDescription>
-          Created by {creator?.user_name ?? "Unknown"} on {formattedDate} at {formattedTime}
-        </CardDescription>
+        <CardTitle>{project_name}</CardTitle>
+        <CardDescription>Created {formattedCreatedDate}</CardDescription>
         <CardAction>
-          <span className="text-xs text-muted-foreground">#{workspace_id}</span>
+          <span className="text-xs text-muted-foreground">#{project_id}</span>
         </CardAction>
       </CardHeader>
 
       <CardContent>
         <p className="text-sm text-muted-foreground">
-          {creator?.user_email ?? "No contact email on file"}
+          {issueCount === null
+            ? "Issue count unavailable"
+            : `${issueCount} ${issueCount === 1 ? "issue" : "issues"}`}
         </p>
+        <p className="text-xs text-muted-foreground">Last updated {formattedUpdatedDate}</p>
         {deleteError && (
           <p role="alert" className="text-sm text-destructive">{deleteError}</p>
         )}
       </CardContent>
 
       <CardFooter className="justify-end gap-2">
-        {canManageWorkspace && (
+        {canManageProject && (
           <>
             <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
               <DialogTrigger render={<Button type="button" variant="outline" className="text-sm">Edit</Button>} />
               <DialogContent className="sm:max-w-sm">
                 <form onSubmit={handleEditSubmit}>
                   <DialogHeader>
-                    <DialogTitle>Edit Workspace</DialogTitle>
-                    <DialogDescription>Update the workspace name.</DialogDescription>
+                    <DialogTitle>Edit Project</DialogTitle>
+                    <DialogDescription>Update the project name.</DialogDescription>
                   </DialogHeader>
 
                   <FieldGroup>
                     <Field>
-                      <Label htmlFor={`edit-workspace-name-${workspace_id}`}>Workspace Name</Label>
+                      <Label htmlFor={`edit-project-name-${project_id}`}>Project Name</Label>
                       <Input
-                        id={`edit-workspace-name-${workspace_id}`}
+                        id={`edit-project-name-${project_id}`}
                         value={editName}
                         onChange={(e) => setEditName(e.target.value)}
                         disabled={isUpdating}
@@ -166,7 +164,7 @@ export function WorkspaceCard({ workspace, user }) {
         )}
 
         <Button className="text-sm underline" onClick={handleViewClick}>
-          View Projects
+          View
         </Button>
       </CardFooter>
     </Card>

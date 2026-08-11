@@ -58,7 +58,7 @@ function Home() {
             return <EmptyDemo />;
         }
         return myWorkspacesViaMembership.map((workspace) => (
-            <WorkspaceCard key={workspace.workspace_id} workspace={workspace} />
+            <WorkspaceCard key={workspace.workspace_id} workspace={workspace} user={user} />
         ));
     };
 
@@ -67,7 +67,7 @@ function Home() {
             return <EmptyDemo user={user}/>;
         }
         return myWorkspaces.map((workspace) => (
-            <WorkspaceCard key={workspace.id} workspace={workspace} />
+            <WorkspaceCard key={workspace.id} workspace={workspace} user={user}/>
         ));
     };
 

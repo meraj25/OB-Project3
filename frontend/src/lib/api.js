@@ -189,7 +189,7 @@ export const Api = createApi({
 
     updateIssue: build.mutation({
         query:({workspaceId,projectId,issueId,...issue}) => ({
-            url:`/issues/workspace/${workspaceId}/project/${projectId}/issue/${issueId}/update`,
+            url:`/issues/workspace/${workspaceId}/project/${projectId}/issue/${issueId}`,
             method:"PATCH",
             body:issue,
         }),
@@ -198,7 +198,7 @@ export const Api = createApi({
 
     deleteIssue: build.mutation({
         query:({issueId,projectId,workspaceId}) => ({
-            url:`/issues/workspace/${workspaceId}/project/${projectId}/issue/${issueId}/delete`,
+            url:`/issues/workspace/${workspaceId}/project/${projectId}/issue/${issueId}`,
             method:"DELETE",
         }),
         invalidatesTags: (result, error, { issueId }) => [{ type: 'Issue', id: issueId }, { type: 'Issue', id: 'LIST' }],
@@ -344,21 +344,26 @@ export const Api = createApi({
     }),
 
     getAllBlockedIssues: build.query({
-        query:({workspaceId,projectId}) => `/block-issues/workspace/${workspaceId}/project/${projectId}/block-issues`,
-
-        providesTags: (result) =>
-        result
-          ? [
-              ...result.blocked_issues.map(({ id }) => ({ type: 'BlockedIssue', id })),
-              { type: 'BlockedIssue', id: 'LIST' },
-            ]
-          : [{ type: 'BlockedIssue', id: 'LIST' }],
-    }),
+    query: ({ workspaceId, projectId }) => `/block-issues/workspace/${workspaceId}/project/${projectId}/block-issues`,
+    providesTags: (result) => {
+        const items = result?.data ?? result?.blocked_issues ?? (Array.isArray(result) ? result : []);
+        return [
+            ...items.map(({ block_issue_id, blocking_issue_id, blocked_issue_id }) => ({
+                type: 'BlockedIssue',
+                id: block_issue_id ?? `${blocking_issue_id}-${blocked_issue_id}`,
+            })),
+            { type: 'BlockedIssue', id: 'LIST' },
+        ];
+    },
+}),
 
     getBlockedIssueById: build.query({
-        query:({workspaceId,projectId,blockedIssueId,blockingIssueId}) => `/block-issues/workspace/${workspaceId}/project/${projectId}/block-issues/${blockingIssueId}/${blockedIssueId}`,
-        providesTags: (result, error, { blockedIssueId }) => [{ type: 'BlockedIssue', id: blockedIssueId }],
-    }),
+    query: ({ workspaceId, projectId, blockedIssueId, blockingIssueId }) =>
+        `/block-issues/workspace/${workspaceId}/project/${projectId}/block-issues/${blockingIssueId}/${blockedIssueId}`,
+    providesTags: (result, error, { blockedIssueId, blockingIssueId }) => [
+        { type: 'BlockedIssue', id: `${blockingIssueId}-${blockedIssueId}` },
+    ],
+}),
     
     createBlockedIssue: build.mutation({
         query:({workspaceId,projectId,blockingIssueId, blockedIssueId}) => ({
