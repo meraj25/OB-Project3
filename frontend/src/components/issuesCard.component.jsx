@@ -30,6 +30,7 @@ import {
     useGetAllBlockedIssuesQuery,
     useGetBlockedIssueByIdQuery
 } from "@/lib/api";
+import { CommentSection } from "./commentSection.component";
 
 const DELETE_ALLOWED_ROLE_IDS = [1, 2];
 const EDIT_ALLOWED_ROLE_IDS = [1, 2];
@@ -253,6 +254,7 @@ export function IssueCard({ issue, subIssues = [], user, users, workspaceId, pro
                     </div>
                 )}
 
+                
                
             </CardContent>
 
@@ -365,6 +367,9 @@ export function IssueCard({ issue, subIssues = [], user, users, workspaceId, pro
                     triggerLabel="Add Sub-issue"
                     triggerVariant="outline"
                 />
+
+                <CommentSection issue={issue} workspaceId={workspaceId} projectId={projectId} user={user} />
+
             </CardFooter>
         </Card>
     );
