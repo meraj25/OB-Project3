@@ -6,6 +6,7 @@ const createIssueSchema = z.object({
     issue_status: z.enum(["To Check", "In Progress", "Resolved"]),
     issue_priority: z.enum(["Low", "Medium", "High"]),
     issue_reporter: z.number().int().positive({ message: "Reporter ID must be a positive integer" }),
+    parent_issue_id: z.number().int().positive({ message: "Parent Issue ID must be a positive integer" }).nullable().optional(),
     project_id: z.number().int().positive({ message: "Project ID must be a positive integer" }),
     assignee_ids: z.array(z.number().int().positive({ message: "Assignee IDs must be positive integers" })).optional(),
     

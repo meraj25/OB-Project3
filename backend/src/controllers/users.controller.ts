@@ -62,7 +62,7 @@ import { error } from "node:console";
         console.log("user",user);
 
         const accessToken = jwt.sign(
-                {user_id:user.user_id, user_email: user.user_email,},
+                {user_id:user.user_id, user_name:user.user_name, user_email: user.user_email,},
                 process.env.JWT_SECRET as string,
                 { expiresIn: "5m" }
             )

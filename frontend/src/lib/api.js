@@ -11,7 +11,7 @@ const baseQueryWithReauth = async (args , api , extraOptions) => {
 
   let result = await baseQuery(args , api , extraOptions);
 
-   if (result.error?.status === 401) {
+   if (result.error?.status === 401 || result.error?.status === 403) {
     if (!refreshPromise) {
 
        refreshPromise = baseQuery(
@@ -55,15 +55,15 @@ export const Api = createApi({
     }), 
 
     getAllUsers: build.query({
-      query: () => '/users',
-      providesTags: (result) =>
-        result
-          ? [
-              ...result.users.map(({ id }) => ({ type: 'User', id })),
-              { type: 'User', id: 'LIST' },
-            ]
-          : [{ type: 'User', id: 'LIST' }],
-    }),
+    query: () => '/users',
+    providesTags: (result) =>
+      result
+        ? [
+            ...result.map(({ user_id }) => ({ type: 'User', id: user_id })),
+            { type: 'User', id: 'LIST' },
+          ]
+        : [{ type: 'User', id: 'LIST' }],
+}),
 
     getUserById: build.query({
       query: (userId) => `/users/${userId}`,
@@ -160,9 +160,9 @@ export const Api = createApi({
 
       },
       providesTags: (result) =>
-        result
+        result?.data
           ? [
-              ...result.issues.map(({ id }) => ({ type: 'Issue', id })),
+              ...result.data.map(({ issue_id }) => ({ type: 'Issue', id: issue_id })),
               { type: 'Issue', id: 'LIST' },
             ]
           : [{ type: 'Issue', id: 'LIST' }],
@@ -189,7 +189,7 @@ export const Api = createApi({
 
     updateIssue: build.mutation({
         query:({workspaceId,projectId,issueId,...issue}) => ({
-            url:`/issues/workspace/${workspaceId}/project/${projectId}/issue/${issueId}/update`,
+            url:`/issues/workspace/${workspaceId}/project/${projectId}/issue/${issueId}`,
             method:"PATCH",
             body:issue,
         }),
@@ -198,19 +198,19 @@ export const Api = createApi({
 
     deleteIssue: build.mutation({
         query:({issueId,projectId,workspaceId}) => ({
-            url:`/issues/workspace/${workspaceId}/project/${projectId}/issue/${issueId}/delete`,
+            url:`/issues/workspace/${workspaceId}/project/${projectId}/issue/${issueId}`,
             method:"DELETE",
         }),
         invalidatesTags: (result, error, { issueId }) => [{ type: 'Issue', id: issueId }, { type: 'Issue', id: 'LIST' }],
     }),
 
     getAllProjects: build.query({
-        query:({workspaceId}) => `/projects/workspace/${workspaceId}/projects`,
+        query:({workspaceId}) => `/projects/workspace/${workspaceId}`,
 
         providesTags: (result) =>
         result
           ? [
-              ...result.projects.map(({ id }) => ({ type: 'Project', id })),
+              ...result.map(({ project_id }) => ({ type: 'Project', id: project_id })),
               { type: 'Project', id: 'LIST' },
             ]
           : [{ type: 'Project', id: 'LIST' }],
@@ -250,15 +250,15 @@ export const Api = createApi({
     }),
 
     getAllWorkspaces: build.query({
-        query:() => `/workspaces`,
-        providesTags: (result) =>
+    query: () => `/workspaces`,
+    providesTags: (result) =>
         result
-          ? [
-              ...result.workspaces.map(({ id }) => ({ type: 'Workspace', id })),
-              { type: 'Workspace', id: 'LIST' },
+            ? [
+                ...result.map(({ workspace_id }) => ({ type: 'Workspace', id: workspace_id })),
+                { type: 'Workspace', id: 'LIST' },
             ]
-          : [{ type: 'Workspace', id: 'LIST' }],
-    }),
+            : [{ type: 'Workspace', id: 'LIST' }],
+}),
 
     getWorkspaceById: build.query({
         query:({workspaceId}) => `/workspaces/workspace/${workspaceId}`,
@@ -266,10 +266,10 @@ export const Api = createApi({
     }),
 
     createWorkspace: build.mutation({
-        query:(workspace_name) => ({
+        query:(workspace) => ({
             url:`/workspaces/create`,
             method:"POST",
-            body:{ workspace_name },
+            body:workspace ,
         }),
 
         invalidatesTags: [{ type: 'Workspace', id: 'LIST' }],
@@ -294,7 +294,18 @@ export const Api = createApi({
     }),
 
     getAllWorkspaceMembers: build.query({
-        query:({workspaceId}) => `/workspaces/${workspaceId}/members`,
+    query: () => `/workspace_members`,
+    providesTags: (result) =>
+        result
+            ? [
+                ...result.map(({ workspace_member_id }) => ({ type: 'WorkspaceMember', id: workspace_member_id })),
+                { type: 'WorkspaceMember', id: 'LIST' },
+            ]
+            : [{ type: 'WorkspaceMember', id: 'LIST' }],
+}),
+
+    getWorkspaceMembersById: build.query({
+        query:({workspaceId}) => `/workspace_members/workspace/${workspaceId}/members`,
 
         providesTags: (result) =>
         result
@@ -307,7 +318,7 @@ export const Api = createApi({
 
     createWorkspaceMember: build.mutation({
         query:({workspaceId,body}) => ({
-            url:`/workspaces/workspace/${workspaceId}/members`,
+            url:`/workspace_members/workspace/${workspaceId}/members`,
             method:"POST",
             body:body,
         }),
@@ -316,7 +327,7 @@ export const Api = createApi({
 
     updateWorkspaceMember: build.mutation({
         query:({workspaceId,memberId,...member}) => ({
-            url:`/workspaces/${workspaceId}/member/${memberId}`,
+            url:`/workspace_members/workspace/${workspaceId}/member/${memberId}`,
             method:"PATCH",
             body:member,
         }),
@@ -325,7 +336,7 @@ export const Api = createApi({
 
     deleteWorkspaceMember: build.mutation({
         query:({workspaceId,memberId}) => ({
-            url:`/workspaces/${workspaceId}/member/${memberId}`,
+            url:`/workspace_members/workspace/${workspaceId}/member/${memberId}`,
             method:"DELETE",
         }),
 
@@ -333,21 +344,26 @@ export const Api = createApi({
     }),
 
     getAllBlockedIssues: build.query({
-        query:({workspaceId,projectId}) => `/block-issues/workspace/${workspaceId}/project/${projectId}/block-issues`,
-
-        providesTags: (result) =>
-        result
-          ? [
-              ...result.blocked_issues.map(({ id }) => ({ type: 'BlockedIssue', id })),
-              { type: 'BlockedIssue', id: 'LIST' },
-            ]
-          : [{ type: 'BlockedIssue', id: 'LIST' }],
-    }),
+    query: ({ workspaceId, projectId }) => `/block-issues/workspace/${workspaceId}/project/${projectId}/block-issues`,
+    providesTags: (result) => {
+        const items = result?.data ?? result?.blocked_issues ?? (Array.isArray(result) ? result : []);
+        return [
+            ...items.map(({ block_issue_id, blocking_issue_id, blocked_issue_id }) => ({
+                type: 'BlockedIssue',
+                id: block_issue_id ?? `${blocking_issue_id}-${blocked_issue_id}`,
+            })),
+            { type: 'BlockedIssue', id: 'LIST' },
+        ];
+    },
+}),
 
     getBlockedIssueById: build.query({
-        query:({workspaceId,projectId,blockedIssueId,blockingIssueId}) => `/block-issues/workspace/${workspaceId}/project/${projectId}/block-issues/${blockingIssueId}/${blockedIssueId}`,
-        providesTags: (result, error, { blockedIssueId }) => [{ type: 'BlockedIssue', id: blockedIssueId }],
-    }),
+    query: ({ workspaceId, projectId, blockedIssueId, blockingIssueId }) =>
+        `/block-issues/workspace/${workspaceId}/project/${projectId}/block-issues/${blockingIssueId}/${blockedIssueId}`,
+    providesTags: (result, error, { blockedIssueId, blockingIssueId }) => [
+        { type: 'BlockedIssue', id: `${blockingIssueId}-${blockedIssueId}` },
+    ],
+}),
     
     createBlockedIssue: build.mutation({
         query:({workspaceId,projectId,blockingIssueId, blockedIssueId}) => ({
@@ -401,6 +417,7 @@ export const {
     useUpdateWorkspaceMutation,
     useDeleteWorkspaceMutation,
     useGetAllWorkspaceMembersQuery,
+    useGetWorkspaceMembersByIdQuery,
     useCreateWorkspaceMemberMutation,
     useUpdateWorkspaceMemberMutation,
     useDeleteWorkspaceMemberMutation,

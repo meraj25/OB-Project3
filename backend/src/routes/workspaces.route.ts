@@ -14,11 +14,11 @@ const WorkspaceRouter = express.Router();
 
 WorkspaceRouter
     .route("/")
-    .get(validateToken,attachPermissions,requireAction,GetAllWorkspaces)
+    .get(validateToken,GetAllWorkspaces)
 
 WorkspaceRouter
     .route("/workspace/:workspace_id")
-    .get(validateToken,attachPermissions,requireAction,GetWorkspaceById)
+    .get(validateToken,attachPermissions,GetWorkspaceById)
 
 WorkspaceRouter
     .route("/create")
@@ -30,6 +30,6 @@ WorkspaceRouter
     
 WorkspaceRouter
     .route("/workspace/:workspace_id/delete")
-    .delete(validateToken,attachPermissions,requireAction("workspace:delete"),UpdateWorkspaceController)
+    .delete(validateToken,attachPermissions,requireAction("workspace:delete"),DeleteWorkspaceController)
 
 export default WorkspaceRouter;

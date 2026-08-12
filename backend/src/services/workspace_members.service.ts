@@ -13,7 +13,7 @@ import NotFoundError from "../domain/errors/not-found-error";
 import { prisma } from "../db/prisma";
 
 
-const getAllWorkspaceMembers = async (workspace_id:number) => {
+const getWorkspaceMembersById = async (workspace_id:number) => {
 
     return prisma.workspace_members.findMany({
         where:{workspace_id}
@@ -21,11 +21,18 @@ const getAllWorkspaceMembers = async (workspace_id:number) => {
 
 };
 
+const getAllWorkspaceMembers = async () => {
+
+    const workspaceMembers = await findAllWorkspaceMembers();
+    return workspaceMembers;
+
+}
+
 const createMember = async (data:{workspace_id:number;user_id:number;role_id:number}) => {
 
    
     if (!data.user_id || !data.role_id) {
-        throw new ValidationError("Email and role are required");
+        throw new ValidationError("User and role are required");
     }
 
     if (data.role_id === 1) {
@@ -77,4 +84,4 @@ const deleteMember = async (workspace_member_id:number,workspace_id:number) => {
 
 }
 
-export{getAllWorkspaceMembers,createMember,updateMember,deleteMember}
+export{getAllWorkspaceMembers,getWorkspaceMembersById,createMember,updateMember,deleteMember}

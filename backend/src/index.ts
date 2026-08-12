@@ -27,10 +27,10 @@ app.use(cookieParser());
 app.use(helmet());
 
 app.use('/api/users',UserRouter);
-app.use('/api/workspaces',Workspace_MembersRouter);
+app.use('/api/workspaces',WorkspaceRouter);
 app.use('/api/projects', ProjectRouter);
 app.use('/api/issues', IssueRouter);
-app.use('/api/workspaces', WorkspaceRouter);
+app.use('/api/workspace_members', Workspace_MembersRouter);
 app.use('/api/block-issues',Block_issuesRouter);
 
 app.use(globalErrorHandlingMiddleware);

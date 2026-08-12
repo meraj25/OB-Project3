@@ -13,6 +13,7 @@ import {
  import { findProjectById } from "../repositories/projects.repository";
  import { enqueueJob } from "../repositories/backgroundJobs.repository";
  import { findIssueWithPeople } from "../repositories/issues.repository";
+ import { findAllBlockedIssues } from "../repositories/block_issues.repository";
 
 const VALID_SORT_FIELDS = ["issue_id", "issue_status", "issue_priority", "created_at"];
 
@@ -141,6 +142,7 @@ const structured_issues = (issue:any) => ({
     issue_priority:string,
     issue_status:string,
     project_id:number,
+    parent_issue_id?:number,
     assignee_ids?:number[]
     },workspace_id:number) => {
 
@@ -171,49 +173,60 @@ const structured_issues = (issue:any) => ({
 
  };
 
- const UpdateIssue = async (issue_id:number, project_id:number,workspace_id:number, data:Partial<{
-    issue_name:string,
-    issue_description:string,
-    issue_priority:string,
-    issue_status:string
- }>) => {
+ const UpdateIssue = async (issue_id: number, project_id: number, workspace_id: number, data: Partial<{
+    issue_name: string,
+    issue_description: string,
+    issue_priority: string,
+    issue_status: string
+}>) => {
 
-    try{
+    try {
 
-    const issue = await findIssueById(issue_id)
+        const issue = await findIssueById(issue_id)
 
-    if (!issue || issue.project_id !== project_id || issue.projects.workspace_id !== workspace_id) {
-          throw new NotFoundError("issue not found!");
-      }
+        if (!issue || issue.project_id !== project_id || issue.projects.workspace_id !== workspace_id) {
+            throw new NotFoundError("issue not found!");
+        }
 
-     const parsed = updateIssueSchema.safeParse(data);
+        if (data.issue_status === "Resolved") {
+            const blockers = await findAllBlockedIssues({ blocked_issue_id: issue_id });
+            const unresolvedBlockers = blockers.filter(
+            (b) => b.issues_block_issues_blocking_issue_idToissues?.issue_status !== "Resolved"
+            );
 
-    if(!parsed.success){
-        throw new ValidationError("Bad request")
+            if (unresolvedBlockers.length > 0) {
+                throw new ValidationError(
+                    `Cannot resolve — ${unresolvedBlockers.length} blocking issue(s) are not yet resolved.`
+                );
+            }
+        }
+
+        const parsed = updateIssueSchema.safeParse(data);
+
+        if (!parsed.success) {
+            throw new ValidationError("Bad request")
+        }
+
+        const updated = await updateIssue(issue_id, parsed.data)
+
+        const fullIssue = await findIssueWithPeople(issue_id);
+        const recipients = getNotificationRecipients(fullIssue);
+
+        if (recipients.length > 0) {
+            await enqueueJob("issue_updated_email", {
+                issue_id,
+                issue_name: fullIssue.issue_name,
+                changes: parsed.data,
+                recipients,
+            });
+        }
+
+        return updated;
+
+    } catch (error) {
+        throw error;
     }
-
-    const updated = await updateIssue(issue_id,parsed.data)
-
-    const fullIssue = await findIssueWithPeople(issue_id);
-    const recipients = getNotificationRecipients(fullIssue);
-
-     if (recipients.length > 0) {
-        await enqueueJob("issue_updated_email", {
-            issue_id,
-            issue_name: fullIssue.issue_name,
-            changes: parsed.data,
-            recipients,
-        });
-    }
-
-    return updated;
-
-    }catch(error){
-
-     throw error;
-
-    }
- };
+};
 
 
 
