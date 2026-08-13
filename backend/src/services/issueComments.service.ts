@@ -8,6 +8,7 @@ import {
 import { findIssueById } from "../repositories/issues.repository"
 import ValidationError from "../domain/errors/validation-error"
 import NotFoundError from "../domain/errors/not-found-error"
+import { emitWorkspaceEvent } from "../sockets/socket"
 
 const GetCommentsForIssue = async(issue_id:number, project_id:number, workspace_id:number) => {
 
@@ -47,11 +48,15 @@ const CreateComment = async(
         chain = await createChainForIssue(issue_id);
     }
 
-    return createComment({
+     const comment = await createComment({
         chain_id: chain.chain_id,
         user_id: data.user_id,
         comment: data.comment.trim(),
     });
+
+    emitWorkspaceEvent(workspace_id, "Comment", "create", comment.comment_id, issue_id);
+
+    return comment;
 
 };
 
@@ -83,7 +88,11 @@ const DeleteComment = async(
         throw { status: 403, message: "You can only delete your own comments" };
     }
 
-    return deleteComment(comment_id);
+    const deletedComment = await deleteComment(comment_id);
+
+    emitWorkspaceEvent(workspace_id, "Comment", "delete", comment_id, issue_id);
+
+    return deletedComment;
 
 };
 

@@ -66,7 +66,7 @@ const DeleteMember = async (req:Request,res:Response,next:NextFunction) => {
         const workspace_id = Number(req.params.workspace_id)
 
         await deleteMember(workspace_id,workspace_member_id)
-        res.status(204).send
+        res.status(204).send();
 
     }catch(error){
 

@@ -6,6 +6,7 @@ import CreateWorkspaceForm from "@/components/createWorkspace.component";
 import React, { useMemo, useState,useEffect } from "react";
 import { useNavigate} from "react-router";
 import { Button } from "@/components/ui/button";
+import { useUserRealtimeSync } from "@/hooks/useUserRealtimeSync";
 
 function Home() {
     const { data: { user } = {}, isLoading:isUserLoading } = useGetUserQuery();
@@ -19,6 +20,8 @@ function Home() {
     console.log(workspacemembers, "workspacemembers")
 
     const [activeTab, setActiveTab] = useState("myWorkspaces");
+
+    useUserRealtimeSync();
 
     useEffect(() => {
         if (!isUserLoading && !validUser) {
@@ -53,6 +56,10 @@ function Home() {
         return <p>Loading your workspaces…</p>;
     }
 
+  
+
+
+
      const allWorkspaces = () => {
         if (myWorkspacesViaMembership.length === 0) {
             return <EmptyDemo />;
@@ -78,6 +85,7 @@ function Home() {
 
     
     console.log(user)
+   
     return (
         <div>
             <Navigation user={user} />

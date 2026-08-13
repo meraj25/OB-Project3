@@ -9,6 +9,7 @@ import {
 import { IssueCard } from "@/components/issuesCard.component";
 import CreateIssueForm from "../components/createIssuesForm.component";
 import { EmptyIssuesDemo } from "@/components/emptyIssues.component";
+import { useRealtimeSync } from "@/hooks/useRealtimeSync";
 
 const STATUS_OPTIONS = ["To Check", "In Progress", "Resolved"];
 const PRIORITY_OPTIONS = ["Low", "Medium", "High"];
@@ -19,10 +20,16 @@ const SORT_FIELDS = [
 ];
 
 function IssuesPage() {
+
+
+
     const { workspace_id, project_id } = useParams();
     const navigate = useNavigate();
     const numericWorkspaceId = Number(workspace_id);
     const numericProjectId = Number(project_id);
+
+    
+    useRealtimeSync(numericWorkspaceId)
 
     const { data: { user } = {}, isLoading: isUserLoading } = useGetUserQuery();
     const { data: users = [] } = useGetAllUsersQuery();

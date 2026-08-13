@@ -1,6 +1,7 @@
 import { getAllWorkspaces,getWorkspaceById,CreateWorkspace,UpdateWorkspace,DeleteWorkspace } from "../services/workspaces.service"
 import { Request,Response,NextFunction } from "express"
 import ValidationError from "../domain/errors/validation-error"
+import { emitUserEvent } from "../sockets/socket"
 
 const GetAllWorkspaces = async (req:Request, res:Response, next:NextFunction) => {
 
@@ -38,10 +39,12 @@ const CreateWorkspaceController = async (req:Request, res:Response, next:NextFun
         const {workspace_name} = req.body
 
         if(!workspace_name){
-            return new ValidationError ("name for the workspace is required")
+            throw new ValidationError("name for the workspace is required");
         }
 
         const workspace = await CreateWorkspace({workspace_name,created_by})
+        emitUserEvent(req.user.user_id, "Workspace", "create");
+        emitUserEvent(req.user.user_id, "WorkspaceMember", "create");
         res.status(201).json(workspace)
 
     }catch(error){

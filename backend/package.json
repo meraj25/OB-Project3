@@ -16,6 +16,7 @@
     "@prisma/client": "^7.8.0",
     "@types/cookie-parser": "^1.4.10",
     "bcrypt": "^6.0.0",
+    "cookie": "^2.0.1",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
@@ -27,6 +28,7 @@
     "nodemailer": "^9.0.3",
     "pg": "^8.22.0",
     "resend": "^6.18.1",
+    "socket.io": "^4.8.3",
     "zod": "^4.4.3"
   },
   "devDependencies": {

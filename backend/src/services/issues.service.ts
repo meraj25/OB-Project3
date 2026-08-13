@@ -14,6 +14,7 @@ import {
  import { enqueueJob } from "../repositories/backgroundJobs.repository";
  import { findIssueWithPeople } from "../repositories/issues.repository";
  import { findAllBlockedIssues } from "../repositories/block_issues.repository";
+ import { emitWorkspaceEvent } from "../sockets/socket";
 
 const VALID_SORT_FIELDS = ["issue_id", "issue_status", "issue_priority", "created_at"];
 
@@ -159,6 +160,8 @@ const structured_issues = (issue:any) => ({
 
     const issue = await createIssue(parsed.data)
 
+    emitWorkspaceEvent(workspace_id, "Issue", "create", issue.issue_id);
+
     const fullIssue = await findIssueWithPeople(issue.issue_id);
     const recipients = getNotificationRecipients(fullIssue);
 
@@ -209,6 +212,8 @@ const structured_issues = (issue:any) => ({
 
         const updated = await updateIssue(issue_id, parsed.data)
 
+        emitWorkspaceEvent(workspace_id, "Issue", "update", issue_id);
+
         const fullIssue = await findIssueWithPeople(issue_id);
         const recipients = getNotificationRecipients(fullIssue);
 
@@ -248,8 +253,11 @@ const structured_issues = (issue:any) => ({
         });
     }
 
-        return await deleteIssue(issue_id)
+        const result = await deleteIssue(issue_id);
 
+        emitWorkspaceEvent(workspace_id, "Issue", "delete", issue_id);
+
+        return result;
     }
 
     const getIssueSubtree = async (issue_id: number, project_id: number, workspace_id: number) => {

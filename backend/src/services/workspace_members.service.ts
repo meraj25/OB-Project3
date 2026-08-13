@@ -11,6 +11,7 @@ import { findUserByEmail } from "../repositories/users.repository";
 import ValidationError from "../domain/errors/validation-error";
 import NotFoundError from "../domain/errors/not-found-error";
 import { prisma } from "../db/prisma";
+import { emitWorkspaceEvent } from "../sockets/socket";
 
 
 const getWorkspaceMembersById = async (workspace_id:number) => {
@@ -45,7 +46,11 @@ const createMember = async (data:{workspace_id:number;user_id:number;role_id:num
         throw { status: 409, message: "User is already a member of this workspace" };
     }
 
-    return createWorkspaceMember({ workspace_id:data.workspace_id, user_id: data.user_id, role_id:data.role_id });
+    const workspaceMember = await createWorkspaceMember({ workspace_id:data.workspace_id, user_id: data.user_id, role_id:data.role_id });
+    emitWorkspaceEvent(data.workspace_id, "WorkspaceMember", "create", workspaceMember.workspace_member_id);
+
+
+    return workspaceMember;
 }
 
 const updateMember = async (workspace_member_id:number, workspace_id:number, role_id:number) => {
@@ -64,12 +69,16 @@ const updateMember = async (workspace_member_id:number, workspace_id:number, rol
         throw new ValidationError("Cannot change ownership or assign an ownership");
     }
 
-    return updateWorkspaceMember(workspace_member_id,{role_id})
+     const workspaceMember = await updateWorkspaceMember(workspace_member_id,{role_id})
+
+     emitWorkspaceEvent(workspace_id, "WorkspaceMember", "update", workspace_member_id);
+
+     return workspaceMember;
 
 
 }
 
-const deleteMember = async (workspace_member_id:number,workspace_id:number) => {
+const deleteMember = async (workspace_id:number,workspace_member_id:number) => {
 
     const member = await findWorkspaceMember(workspace_member_id);
 
@@ -80,7 +89,11 @@ const deleteMember = async (workspace_member_id:number,workspace_id:number) => {
         throw new ValidationError("Cannot remove the workspace owner");
     }
 
-    return deleteWorkspaceMember(workspace_member_id);
+    const workspaceMember = await deleteWorkspaceMember(workspace_member_id);
+
+    emitWorkspaceEvent(workspace_id, "WorkspaceMember", "delete", workspace_member_id);
+
+    return workspaceMember;
 
 }
 

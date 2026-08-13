@@ -11,6 +11,8 @@ import NotFoundError from "../domain/errors/not-found-error";
 import UnauthorizedError from "../domain/errors/unauthorized-error";
 import ValidationError from "../domain/errors/validation-error";
 import ForbiddenError from "../domain/errors/forbidden-error";
+import { emitWorkspaceEvent, emitUserEvent } from "../sockets/socket";
+import { findByWorkspace } from "../repositories/workspace_members";
 
 const getAllWorkspaces = async () => {
     const workspaces = await findAllWorkspaces();
@@ -29,6 +31,10 @@ const getWorkspaceById = async (workspace_id: number) => {
 const CreateWorkspace = async (data:{workspace_name:string, created_by:number}) => {
 
     const workspace = await  createWorkspace(data)
+
+    emitWorkspaceEvent(workspace.workspace_id, "Workspace", "create", workspace.workspace_id);
+  
+
     return workspace;
 
 }
@@ -42,7 +48,13 @@ const UpdateWorkspace = async (workspace_id:number, data:Partial<{workspace_name
         throw new NotFoundError("Not found!");
     }
 
-    return await updateWorkspace(workspace_id,data);
+     const result = await updateWorkspace(workspace_id,data);
+
+     const members = await findByWorkspace(workspace_id);
+
+    members.forEach(({ user_id }) => emitUserEvent(user_id, "Workspace", "update", workspace_id));
+
+     return result
     
     
 
@@ -55,7 +67,14 @@ const DeleteWorkspace = async (workspace_id:number) => {
         throw new NotFoundError("Not found!");
     }
 
-    return await deleteWorkspace(workspace_id)
+ const members = await findByWorkspace(workspace_id);
+
+    
+  const result = await deleteWorkspace(workspace_id)
+
+  members.forEach(({ user_id }) => emitUserEvent(user_id, "Workspace", "delete", workspace_id));
+
+  return result;
 
 }
 

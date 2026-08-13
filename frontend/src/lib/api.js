@@ -272,7 +272,10 @@ export const Api = createApi({
             body:workspace ,
         }),
 
-        invalidatesTags: [{ type: 'Workspace', id: 'LIST' }],
+        invalidatesTags: [
+            { type: 'Workspace', id: 'LIST' },
+            { type: 'WorkspaceMember', id: 'LIST' },
+        ],
     }),
 
     updateWorkspace: build.mutation({

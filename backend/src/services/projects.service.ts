@@ -8,6 +8,7 @@ import {
 
 import NotFoundError from "../domain/errors/not-found-error";
 import ValidationError from "../domain/errors/validation-error";
+import { emitWorkspaceEvent } from "../sockets/socket";
 
 
 const getAllProjects = async (workspace_id: number) => {
@@ -42,7 +43,11 @@ const CreateProject = async (data:{project_name:string,workspace_id:number; }) =
         throw new ValidationError("Project name is required");
     }
 
-    return  createProject(data)
+    const project = await createProject(data)
+
+    emitWorkspaceEvent(data.workspace_id, "Project", "create", project.project_id);
+
+    return project;
     
 
 }
@@ -56,7 +61,11 @@ const UpdateProject = async (workspace_id: number, project_id: number, data: Par
         throw new NotFoundError("Project not found!");
     }
 
-    return await updateProject(project_id,data);
+    const updatedProject = await updateProject(project_id,data);
+
+    emitWorkspaceEvent(workspace_id, "Project", "update", project_id);
+
+    return updatedProject;
     
     
 
@@ -69,7 +78,10 @@ const DeleteProject = async (workspace_id: number, project_id: number) => {
         throw new NotFoundError("Project not found!");
     }
 
-    return await deleteProject(project_id)
+    const deletedProject = await deleteProject(project_id)
+    emitWorkspaceEvent(workspace_id, "Project", "delete", project_id);
+
+    return deletedProject;
 
 }
 

@@ -1,5 +1,5 @@
 import request from "supertest"
-import app from "../..";
+import app from "../../app";
 import {prisma} from "../../db/prisma"
 
 
