@@ -40,7 +40,7 @@ const baseQueryWithReauth = async (args , api , extraOptions) => {
 export const Api = createApi({
   reducerPath: 'Api',
   baseQuery: baseQueryWithReauth,
-  tagTypes: ['User', 'Issue', 'Project', 'Workspace', 'WorkspaceMember', 'BlockedIssue'],
+  tagTypes: ['User', 'Issue', 'Project', 'Workspace', 'WorkspaceMember', 'BlockedIssue', 'Comment'],
   endpoints: (build) => ({
 
 
@@ -380,9 +380,36 @@ export const Api = createApi({
             method:"DELETE",
         }),
         invalidatesTags: (result, error, { blockedIssueId }) => [{ type: 'BlockedIssue', id: blockedIssueId }, { type: 'BlockedIssue', id: 'LIST' }], 
-    })
+    }),
 
+    getIssueComments: build.query({
+    query: ({ workspaceId, projectId, issueId }) =>
+        `/issues/workspace/${workspaceId}/project/${projectId}/issue/${issueId}/comments`,
+    providesTags: (result, error, { issueId }) => {
+        const items = result?.data ?? [];
+        return [
+            ...items.map(({ comment_id }) => ({ type: 'Comment', id: comment_id })),
+            { type: 'Comment', id: `LIST-${issueId}` },
+        ];
+    },
+}),
 
+createComment: build.mutation({
+    query: ({ workspaceId, projectId, issueId, comment }) => ({
+        url: `/issues/workspace/${workspaceId}/project/${projectId}/issue/${issueId}/comments`,
+        method: "POST",
+        body: { comment },
+    }),
+    invalidatesTags: (result, error, { issueId }) => [{ type: 'Comment', id: `LIST-${issueId}` }],
+}),
+
+deleteComment: build.mutation({
+    query: ({ workspaceId, projectId, issueId, commentId }) => ({
+        url: `/issues/workspace/${workspaceId}/project/${projectId}/issue/${issueId}/comments/${commentId}`,
+        method: "DELETE",
+    }),
+    invalidatesTags: (result, error, { issueId }) => [{ type: 'Comment', id: `LIST-${issueId}` }],
+}),
 
 
   }),
@@ -424,4 +451,8 @@ export const {
     useGetAllBlockedIssuesQuery,
     useGetBlockedIssueByIdQuery,
     useCreateBlockedIssueMutation,
-    useDeleteBlockedIssueMutation } = Api
+    useDeleteBlockedIssueMutation,
+    useGetIssueCommentsQuery,
+    useCreateCommentMutation,
+    useDeleteCommentMutation,
+ } = Api

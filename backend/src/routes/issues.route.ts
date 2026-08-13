@@ -12,6 +12,7 @@ import {
 import { validateToken } from "../middlewares/JWT.middleware";
 import { requireAction } from "../middlewares/requireAction.middleware";
 import { attachPermissions } from "../middlewares/permission.middleware";
+import { GetCommentsController, CreateCommentController, DeleteCommentController } from "../controllers/issueComments.controller";
 
 const IssueRouter = express.Router();
 
@@ -45,6 +46,15 @@ IssueRouter
 IssueRouter
     .route("/workspace/:workspace_id/project/:project_id/issues/export")
     .get(validateToken,attachPermissions,ExportIssuesCSV)
+
+IssueRouter
+    .route("/workspace/:workspace_id/project/:project_id/issue/:issue_id/comments")
+    .get(validateToken, attachPermissions, GetCommentsController)
+    .post(validateToken, attachPermissions, CreateCommentController);
+
+IssueRouter
+    .route("/workspace/:workspace_id/project/:project_id/issue/:issue_id/comments/:comment_id")
+    .delete(validateToken, attachPermissions, DeleteCommentController);
 
 
 export default IssueRouter;
