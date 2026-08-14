@@ -9,11 +9,13 @@ import LoginPage from './pages/login.page'
 import ProjectsPage from './pages/projects.page'
 import IssuesPage from './pages/issues.page'
 import Home from './pages/home.page'
+import SocketConnector from './components/socketConnector.component'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <Provider store={store}>
     <BrowserRouter>
+    
     <Routes>
       <Route path='/' element={<Home/>}/>
       <Route path='/register' element={<SignupPage/>}/>
@@ -23,6 +25,7 @@ createRoot(document.getElementById('root')).render(
       <Route path="/workspaces/:workspace_id/projects/:project_id/issues" element={<IssuesPage />} />
 
     </Routes>
+  
     
     </BrowserRouter>
     </Provider>

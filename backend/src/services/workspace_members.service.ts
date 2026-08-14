@@ -11,7 +11,7 @@ import { findUserByEmail } from "../repositories/users.repository";
 import ValidationError from "../domain/errors/validation-error";
 import NotFoundError from "../domain/errors/not-found-error";
 import { prisma } from "../db/prisma";
-import { emitWorkspaceEvent } from "../sockets/socket";
+import { emitWorkspaceEvent, emitUserEvent } from "../sockets/socket";
 
 
 const getWorkspaceMembersById = async (workspace_id:number) => {
@@ -48,6 +48,8 @@ const createMember = async (data:{workspace_id:number;user_id:number;role_id:num
 
     const workspaceMember = await createWorkspaceMember({ workspace_id:data.workspace_id, user_id: data.user_id, role_id:data.role_id });
     emitWorkspaceEvent(data.workspace_id, "WorkspaceMember", "create", workspaceMember.workspace_member_id);
+    emitUserEvent(data.user_id, "Workspace", "create");
+    emitUserEvent(data.user_id, "WorkspaceMember", "create");
 
 
     return workspaceMember;

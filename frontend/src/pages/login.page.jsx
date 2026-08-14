@@ -3,6 +3,7 @@ import { useLoginUserMutation } from "@/lib/api";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router";
+import { socket } from "@/lib/socket";
 
 function LoginPage() {
 const [form , setForm] = useState({user_email:"" , user_password: ""})
@@ -38,6 +39,7 @@ const handleSubmit = async (e) => {
 
     try{
          const results = await loginUser(form).unwrap();
+         socket.connect();    
          console.log("user loggedin successfully!") 
          setLoggedin(true);
          setTimeout(() => navigate("/"), 4000)

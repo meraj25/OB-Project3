@@ -1,4 +1,5 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react'
+import { socket } from './socket';
 
 const baseQuery = fetchBaseQuery({
   baseUrl: 'http://localhost:8000/api',
@@ -28,6 +29,12 @@ const baseQueryWithReauth = async (args , api , extraOptions) => {
 
     if (refreshResult.data) {
       result = await baseQuery(args, api, extraOptions);
+
+        if (socket.connected) {
+        socket.disconnect();
+        socket.connect();
+    }
+
     } else {
       api.dispatch(Api.util.resetApiState());
       window.location.href = '/login';
@@ -76,7 +83,7 @@ export const Api = createApi({
         method: 'POST',
         body: form,
       }),
-      invalidatesTags: [{ type: 'User', id: 'LIST' }],
+      invalidatesTags: [{ type: 'User', id: 'CURRENT' }],
     }),
 
     updateUser: build.mutation({
@@ -98,8 +105,7 @@ export const Api = createApi({
 
     getUser: build.query({
       query: () => '/users/getuser',
-      providesTags: (result) =>
-        result ? [{ type: 'User', id: result.id }] : [],
+      providesTags: [{ type: 'User', id: 'CURRENT' }],
     }),
 
     refreshUser: build.mutation({
@@ -115,7 +121,7 @@ export const Api = createApi({
         url: '/users/logout',
         method: 'POST',
       }),
-        invalidatesTags: [{ type: 'User', id: 'LIST' }],
+        invalidatesTags: [{ type: 'User', id: 'CURRENT' }],
     }),
 
     requestPasswordReset: build.mutation({

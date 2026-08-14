@@ -7,11 +7,19 @@ import React, { useMemo, useState,useEffect } from "react";
 import { useNavigate} from "react-router";
 import { Button } from "@/components/ui/button";
 import { useUserRealtimeSync } from "@/hooks/useUserRealtimeSync";
+import { socket } from "@/lib/socket";
 
 function Home() {
     const { data: { user } = {}, isLoading:isUserLoading } = useGetUserQuery();
     const navigate = useNavigate();
     const validUser = Boolean(user);
+
+    useEffect(() => {
+        if (user && !socket.connected) {
+            socket.connect();
+        }
+    }, [user]);
+
 
     const { data: workspaces = [] } = useGetAllWorkspacesQuery();
     const { data: workspacemembers = [], isLoading } = useGetAllWorkspaceMembersQuery();
