@@ -38,7 +38,7 @@ export function ProjectCard({ project, user, workspaceId }) {
   const [updateProject, { isLoading: isUpdating }] = useUpdateProjectMutation();
   const [deleteProject, { isLoading: isDeleting }] = useDeleteProjectMutation();
 
-  const { project_id, project_name, created_at, updated_at, issues } = project;
+  const { project_id, project_name, created_at, updated_at } = project;
 
   const myMembership = workspaceMembers.find(
     (m) => m.user_id === user?.user_id && m.workspace_id === workspaceId
@@ -60,7 +60,7 @@ export function ProjectCard({ project, user, workspaceId }) {
     month: "short",
     day: "numeric",
   });
-  const issueCount = Array.isArray(issues) ? issues.length : null;
+
 
   const handleViewClick = () => {
     navigate(`/workspaces/${workspaceId}/projects/${project_id}/issues`);
@@ -103,12 +103,6 @@ export function ProjectCard({ project, user, workspaceId }) {
       </CardHeader>
 
       <CardContent>
-        <p className="text-sm text-muted-foreground">
-          {issueCount === null
-            ? "Issue count unavailable"
-            : `${issueCount} ${issueCount === 1 ? "issue" : "issues"}`}
-        </p>
-        <p className="text-xs text-muted-foreground">Last updated {formattedUpdatedDate}</p>
         {deleteError && (
           <p role="alert" className="text-sm text-destructive">{deleteError}</p>
         )}

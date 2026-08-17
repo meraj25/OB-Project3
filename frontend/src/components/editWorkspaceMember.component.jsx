@@ -11,6 +11,8 @@ export function WorkspaceMemberRow({ member, workspaceId, canManage, isSelf }) {
     const [updateWorkspaceMember, { isLoading: isUpdating }] = useUpdateWorkspaceMemberMutation();
     const [deleteWorkspaceMember, { isLoading: isDeleting }] = useDeleteWorkspaceMemberMutation();
 
+  
+
     const [roleValue, setRoleValue] = useState(member.role_id);
     const [error, setError] = useState("");
     const [confirmingDelete, setConfirmingDelete] = useState(false);

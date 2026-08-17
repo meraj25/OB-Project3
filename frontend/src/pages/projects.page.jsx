@@ -11,6 +11,7 @@ import { ProjectCard } from "../components/projectsCard.component";
 import { InviteMemberForm } from "../components/inviteMember.component";
 import { WorkspaceMemberRow } from "../components/editWorkspaceMember.component";
 import { EmptyProjectsDemo } from "@/components/emptyProjects.component";
+import { useRealtimeSync } from "@/hooks/useRealtimeSync";
 
 const ROLE_NAME_FALLBACK = {
     1: "owner",
@@ -21,11 +22,15 @@ const OWNER_ROLE_ID = 1;
 
 function ProjectsPage() {
 
+    
+
     const params = useParams();
     console.log(params); 
     const { workspace_id } = useParams();
     const navigate = useNavigate();
     const numericWorkspaceId = Number(workspace_id);
+
+    useRealtimeSync(numericWorkspaceId)
 
     const { data: projects = [], isLoading: isProjectsLoading } = useGetAllProjectsQuery({
         workspaceId: numericWorkspaceId,

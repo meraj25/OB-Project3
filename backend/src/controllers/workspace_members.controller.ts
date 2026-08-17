@@ -49,7 +49,7 @@ const UpdateMember = async (req:Request,res:Response,next:NextFunction) => {
         const workspace_member_id = Number(req.params.member_id);
         const { role_id } = req.body;
 
-        const member = await updateMember(workspace_id,workspace_member_id,role_id)
+       const member = await updateMember(workspace_member_id, workspace_id, role_id)
         res.status(200).json(member)
 
 
@@ -66,7 +66,7 @@ const DeleteMember = async (req:Request,res:Response,next:NextFunction) => {
         const workspace_id = Number(req.params.workspace_id)
 
         await deleteMember(workspace_id,workspace_member_id)
-        res.status(204).send
+        res.status(204).send();
 
     }catch(error){
 

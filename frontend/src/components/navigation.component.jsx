@@ -1,6 +1,8 @@
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router";
 import { useLogoutUserMutation } from "@/lib/api";
+import { socket } from "@/lib/socket";
+
 
 
 export default function Navigation({ user }) {
@@ -12,6 +14,7 @@ export default function Navigation({ user }) {
   const handleLogout = async () => {
     try {
       await logoutUser().unwrap();
+      socket.disconnect();
       window.location.href = "/login";
     } catch (error) {
       console.error("Logout failed:", error);

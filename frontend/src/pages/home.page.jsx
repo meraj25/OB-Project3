@@ -6,19 +6,30 @@ import CreateWorkspaceForm from "@/components/createWorkspace.component";
 import React, { useMemo, useState,useEffect } from "react";
 import { useNavigate} from "react-router";
 import { Button } from "@/components/ui/button";
+import { useUserRealtimeSync } from "@/hooks/useUserRealtimeSync";
+import { socket } from "@/lib/socket";
 
 function Home() {
     const { data: { user } = {}, isLoading:isUserLoading } = useGetUserQuery();
     const navigate = useNavigate();
     const validUser = Boolean(user);
 
-    const { data: workspaces = [] } = useGetAllWorkspacesQuery();
-    const { data: workspacemembers = [], isLoading } = useGetAllWorkspaceMembersQuery();
+    useEffect(() => {
+        if (user && !socket.connected) {
+            socket.connect();
+        }
+    }, [user]);
+
+
+    const { data: workspaces = [] } = useGetAllWorkspacesQuery(undefined,{refetchOnMountOrArgChange: true,});
+    const { data: workspacemembers = [], isLoading } = useGetAllWorkspaceMembersQuery(undefined, {refetchOnMountOrArgChange: true,});
 
     console.log(workspaces, "workspaces")
     console.log(workspacemembers, "workspacemembers")
 
     const [activeTab, setActiveTab] = useState("myWorkspaces");
+
+    useUserRealtimeSync();
 
     useEffect(() => {
         if (!isUserLoading && !validUser) {
@@ -53,6 +64,10 @@ function Home() {
         return <p>Loading your workspaces…</p>;
     }
 
+  
+
+
+
      const allWorkspaces = () => {
         if (myWorkspacesViaMembership.length === 0) {
             return <EmptyDemo />;
@@ -78,6 +93,7 @@ function Home() {
 
     
     console.log(user)
+   
     return (
         <div>
             <Navigation user={user} />
