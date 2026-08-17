@@ -4,11 +4,17 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router";
 import { socket } from "@/lib/socket";
+import { useSearchParams } from "react-router"; 
+import { Link } from "react-router";
 
 function LoginPage() {
 const [form , setForm] = useState({user_email:"" , user_password: ""})
 const [errors, setErrors] = useState({user_email:"" ,user_password:""})
 const [loggedin, setLoggedin] = useState(false)
+
+const [searchParams] = useSearchParams();
+
+const redirect = searchParams.get("redirect")
 
 const [loginUser,{isLoading}] = useLoginUserMutation();
 
@@ -42,7 +48,7 @@ const handleSubmit = async (e) => {
          socket.connect();    
          console.log("user loggedin successfully!") 
          setLoggedin(true);
-         setTimeout(() => navigate("/"), 4000)
+         setTimeout(() => navigate(redirect || "/"), 4000) 
     }catch(error){
         console.log(error)
         setErrors({ form: "Failed to create content. Try again." })
@@ -77,7 +83,12 @@ const handleSubmit = async (e) => {
             <Button type="submit" disabled={isLoading}>
                 {isLoading ? "Login..." : "Login"}
             </Button>
-            <a className="text-sm text-muted-foreground hover:underline" href="/register">Create account</a>
+            <p>
+                Don't have an account?{" "}
+                <Link to={`/register${redirect ? `?redirect=${encodeURIComponent(redirect)}` : ""}`}>
+                    Register
+                </Link>
+            </p>
           </div>
            {loggedin && (
             <p className="text-sm text-green-600">

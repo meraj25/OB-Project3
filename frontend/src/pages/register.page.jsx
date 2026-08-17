@@ -3,6 +3,8 @@ import { useNavigate } from "react-router";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
+import { useSearchParams } from "react-router";
+
 
 
 function SignupPage() {
@@ -10,6 +12,8 @@ function SignupPage() {
     const [form , setForm ] = useState({name: "" ,email:"" , password: ""})
     const [errors, setErrors] = useState({name: "" ,email:"" , password: ""})
     const [success , setSuccess] = useState(false);
+    const [searchParams] = useSearchParams();
+    const redirect = searchParams.get("redirect");
 
     const navigate = useNavigate();
 
@@ -48,7 +52,7 @@ function SignupPage() {
 
          setSuccess(true)
          
-         setTimeout(() => navigate("/login"),setSuccess(false), 4000)
+         setTimeout(() => navigate(`/login${redirect ? `?redirect=${encodeURIComponent(redirect)}` : ""}`, { replace: true }), 4000)
 
     }catch(error){
         console.log(error)

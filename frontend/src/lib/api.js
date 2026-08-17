@@ -334,6 +334,36 @@ export const Api = createApi({
         invalidatesTags: [{ type: 'WorkspaceMember', id: 'LIST' }],
     }),
 
+    createWorkspaceInvite: build.mutation({
+    query: ({ workspaceId,body:{user_email, role_id} }) => ({
+        url: `/workspace_members/workspace/${workspaceId}/invite`,
+        method: "POST",
+        body: { user_email, role_id },
+    }),
+    }),
+
+    acceptMembershipInvite: build.mutation({
+    query: (token) => ({
+        url: `/workspace_members/invites/${token}/accept`,
+        method: "POST",
+    }),
+    invalidatesTags: [
+        { type: 'Workspace', id: 'LIST' },
+        { type: 'WorkspaceMember', id: 'LIST' },
+    ],
+}),
+
+    getInviteDetails: build.query({
+    query: (token) => `/workspace_members/invites/${token}`,
+}),
+
+   declineWorkspaceInvite: build.mutation({
+    query: (token) => ({ 
+        url: `/workspace_members/invites/${token}/decline`, 
+        method: "POST" 
+    }),
+}),
+
     updateWorkspaceMember: build.mutation({
         query:({workspaceId,memberId,...member}) => ({
             url:`/workspace_members/workspace/${workspaceId}/member/${memberId}`,
@@ -455,6 +485,8 @@ export const {
     useGetAllWorkspaceMembersQuery,
     useGetWorkspaceMembersByIdQuery,
     useCreateWorkspaceMemberMutation,
+    useCreateWorkspaceInviteMutation,
+    useAcceptMembershipInviteMutation,
     useUpdateWorkspaceMemberMutation,
     useDeleteWorkspaceMemberMutation,
     useGetAllBlockedIssuesQuery,
@@ -464,4 +496,6 @@ export const {
     useGetIssueCommentsQuery,
     useCreateCommentMutation,
     useDeleteCommentMutation,
+    useGetInviteDetailsQuery,
+    useDeclineWorkspaceInviteMutation
  } = Api

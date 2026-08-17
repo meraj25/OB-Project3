@@ -87,6 +87,7 @@ model roles {
   role_id           Int                 @id @default(autoincrement())
   role_name         String              @unique @db.VarChar(45)
   workspace_members workspace_members[]
+  workspace_invites workspace_invites[]
 }
 
 model users {
@@ -118,13 +119,14 @@ model workspace_members {
 }
 
 model workspaces {
-  workspace_id      Int                @id @default(autoincrement())
-  workspace_name    String             @unique @db.VarChar(255)
-  created_at        DateTime           @default(now()) @db.Timestamp(6)
+  workspace_id      Int                 @id @default(autoincrement())
+  workspace_name    String              @unique @db.VarChar(255)
+  created_at        DateTime            @default(now()) @db.Timestamp(6)
   created_by        Int
   projects          projects[]
   workspace_members workspace_members?
-  users             users              @relation(fields: [created_by], references: [user_id], onUpdate: NoAction)
+  workspace_invites workspace_invites[]
+  users             users               @relation(fields: [created_by], references: [user_id], onUpdate: NoAction)
 }
 
 model issue_comments_chain {
@@ -173,4 +175,19 @@ model background_jobs {
   created_at DateTime @default(now())
 
   @@index([status], map: "idx_background_jobs_status")
+}
+
+model workspace_invites {
+  invite_id    Int      @id @default(autoincrement())
+  workspace_id Int
+  user_email   String
+  role_id      Int
+  token        String   @unique
+  invited_by   Int
+  status       String   @default("pending")
+  expires_at   DateTime
+  created_at   DateTime @default(now())
+
+  workspaces workspaces @relation(fields: [workspace_id], references: [workspace_id])
+  roles      roles      @relation(fields: [role_id], references: [role_id])
 }

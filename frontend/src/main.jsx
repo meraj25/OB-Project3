@@ -9,7 +9,7 @@ import LoginPage from './pages/login.page'
 import ProjectsPage from './pages/projects.page'
 import IssuesPage from './pages/issues.page'
 import Home from './pages/home.page'
-import SocketConnector from './components/socketConnector.component'
+import AcceptInvitePage from './pages/acceptInvite.page'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
@@ -20,7 +20,7 @@ createRoot(document.getElementById('root')).render(
       <Route path='/' element={<Home/>}/>
       <Route path='/register' element={<SignupPage/>}/>
       <Route path='/login' element={<LoginPage/>}/>
-
+      <Route path='/invites/:token' element={<AcceptInvitePage/>}/>
       <Route path='/workspaces/:workspace_id/projects' element={<ProjectsPage />} />
       <Route path="/workspaces/:workspace_id/projects/:project_id/issues" element={<IssuesPage />} />
 

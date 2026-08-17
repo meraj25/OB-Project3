@@ -21,8 +21,8 @@ function Home() {
     }, [user]);
 
 
-    const { data: workspaces = [] } = useGetAllWorkspacesQuery();
-    const { data: workspacemembers = [], isLoading } = useGetAllWorkspaceMembersQuery();
+    const { data: workspaces = [] } = useGetAllWorkspacesQuery(undefined,{refetchOnMountOrArgChange: true,});
+    const { data: workspacemembers = [], isLoading } = useGetAllWorkspaceMembersQuery(undefined, {refetchOnMountOrArgChange: true,});
 
     console.log(workspaces, "workspaces")
     console.log(workspacemembers, "workspacemembers")
