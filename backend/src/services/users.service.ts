@@ -18,6 +18,8 @@ import {
 import bcrypt from "bcrypt"
 import crypto from "crypto"
 import * as jwt from "jsonwebtoken"
+import {prisma} from "../db/prisma"
+import { sendVerificationEmail } from "../utils/mail";
 
 const getAllUsers  = async () => {
 
@@ -55,6 +57,16 @@ const CreateUser = async (data:{user_name?:string,user_email:string,user_passwor
     const hashedPassword = await bcrypt.hash(data.user_password, 10);
     const user = await createUser({user_name: data.user_name, user_email: data.user_email,user_password:hashedPassword})
 
+    const token = crypto.randomBytes(32).toString("hex");
+    const expires_at = new Date(Date.now() + 24 * 60 * 60 * 1000); 
+
+    await prisma.verification_tokens.create({
+        data: { user_id: user.user_id, token, expires_at },
+    });
+
+    const verifyLink = `${process.env.FRONTEND_URL}/verify-email/${token}`;
+    await sendVerificationEmail(user.user_email, verifyLink);
+
     const {user_password, ...safeUser} = user;
     return safeUser;
 
@@ -71,6 +83,10 @@ const loginUser = async (data:{user_email:string;user_password:string}) => {
     const user = await findUserByEmail(data.user_email)
     if(!user){
         throw new NotFoundError("Not found error!")
+    }
+
+    if (!user.email_verified) {
+        throw new ValidationError("Please verify your email before logging in");
     }
 
     let matchingUser = null;

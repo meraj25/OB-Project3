@@ -1,83 +1,112 @@
-    import { useState, useMemo } from "react";
-    import { Button } from "./ui/button";
-    import {
-        Dialog,
-        DialogClose,
-        DialogContent,
-        DialogDescription,
-        DialogFooter,
-        DialogHeader,
-        DialogTitle,
-        DialogTrigger,
-    } from "./ui/dialog";
-    import { Field, FieldGroup } from "./ui/field";
-    import { Label } from "./ui/label";
-    import { useCreateWorkspaceInviteMutation, useGetUserByIdQuery } from "@/lib/api";
+import { useState, useMemo } from "react";
+import { Button } from "./ui/button";
+import {
+    Dialog,
+    DialogClose,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from "./ui/dialog";
+import { Field, FieldGroup } from "./ui/field";
+import { Label } from "./ui/label";
+import { Input } from "./ui/input";
+import { useCreateWorkspaceInviteMutation, useGetUserByIdQuery } from "@/lib/api";
 
 
-    const INVITABLE_ROLES = [
-        { role_id: 2, role_name: "executive_member" },
-        { role_id: 3, role_name: "member" },
-    ];
+const INVITABLE_ROLES = [
+    { role_id: 2, role_name: "executive_member" },
+    { role_id: 3, role_name: "member" },
+];
 
-    export function InviteMemberForm({ workspaceId, users, existingMemberUserIds }) {
-        const [createWorkspaceMemberInvite, { isLoading }] = useCreateWorkspaceInviteMutation();
+export function InviteMemberForm({ workspaceId, users, existingMemberUserIds }) {
+    const [createWorkspaceMemberInvite, { isLoading }] = useCreateWorkspaceInviteMutation();
 
-        const [selectedUserId, setSelectedUserId] = useState("");
-        const [selectedRoleId, setSelectedRoleId] = useState(String(INVITABLE_ROLES[1].role_id)); 
-        const [open, setOpen] = useState(false);
-        const [error, setError] = useState("");
+    const [mode, setMode] = useState("existing"); 
+    const [selectedUserId, setSelectedUserId] = useState("");
+    const [manualEmail, setManualEmail] = useState("");
+    const [selectedRoleId, setSelectedRoleId] = useState(String(INVITABLE_ROLES[1].role_id));
+    const [open, setOpen] = useState(false);
+    const [error, setError] = useState("");
 
+    const invitableUsers = useMemo(
+        () => users.filter((u) => !existingMemberUserIds.includes(u.user_id)),
+        [users, existingMemberUserIds]
+    );
 
-        const invitableUsers = useMemo(
-            () => users.filter((u) => !existingMemberUserIds.includes(u.user_id)),
-            [users, existingMemberUserIds]
-        );
+    const { data: invite_user } = useGetUserByIdQuery(Number(selectedUserId), {
+        skip: mode !== "existing" || !selectedUserId,
+    });
 
-        const { data: invite_user,isLoading: isLoadingUser,} = useGetUserByIdQuery(Number(selectedUserId))
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setError("");
 
-        console.log(invite_user)
+        let emailToInvite;
 
-        console.log(selectedUserId)
-
-        
-
-        const handleSubmit = async (e) => {
-            e.preventDefault();
-            setError("");
-
+        if (mode === "existing") {
             if (!selectedUserId) {
                 setError("Please select a person to invite.");
                 return;
             }
-
-            try {
-                await createWorkspaceMemberInvite({
-                    workspaceId,
-                    body: {
-                        user_email: String(invite_user.user_email),
-                        role_id: Number(selectedRoleId),
-                    },
-                }).unwrap();
-                setSelectedUserId("");
-                setOpen(false);
-            } catch (err) {
-            
-                setError(err?.data?.message ?? "Couldn't add member. Please try again.");
+            emailToInvite = invite_user?.user_email;
+        } else {
+            if (!manualEmail.trim()) {
+                setError("Please enter an email address.");
+                return;
             }
-        };
+            emailToInvite = manualEmail.trim();
+        }
 
-        return (
-            <Dialog open={open} onOpenChange={setOpen}>
-                <DialogTrigger render={<Button type="button" variant="outline">Invite Member</Button>} />
-                <DialogContent className="sm:max-w-sm">
-                    <form onSubmit={handleSubmit}>
-                        <DialogHeader>
-                            <DialogTitle>Invite a Member</DialogTitle>
-                            <DialogDescription>Add someone to this workspace and assign their role.</DialogDescription>
-                        </DialogHeader>
+        try {
+            await createWorkspaceMemberInvite({
+                workspaceId,
+                body: {
+                    user_email: String(emailToInvite),
+                    role_id: Number(selectedRoleId),
+                },
+            }).unwrap();
+            setSelectedUserId("");
+            setManualEmail("");
+            setOpen(false);
+        } catch (err) {
+            setError(err?.data?.message ?? "Couldn't send invite. Please try again.");
+        }
+    };
 
-                        <FieldGroup>
+    return (
+        <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger render={<Button type="button" variant="outline">Invite Member</Button>} />
+            <DialogContent className="sm:max-w-sm">
+                <form onSubmit={handleSubmit}>
+                    <DialogHeader>
+                        <DialogTitle>Invite a Member</DialogTitle>
+                        <DialogDescription>Add someone to this workspace and assign their role.</DialogDescription>
+                    </DialogHeader>
+
+                    <div className="flex gap-2 mb-2">
+                        <Button
+                            type="button"
+                            variant={mode === "existing" ? "default" : "outline"}
+                            onClick={() => setMode("existing")}
+                            disabled={isLoading}
+                        >
+                            Existing user
+                        </Button>
+                        <Button
+                            type="button"
+                            variant={mode === "email" ? "default" : "outline"}
+                            onClick={() => setMode("email")}
+                            disabled={isLoading}
+                        >
+                            Invite by email
+                        </Button>
+                    </div>
+
+                    <FieldGroup>
+                        {mode === "existing" ? (
                             <Field>
                                 <Label htmlFor="invite_user">Person</Label>
                                 <select
@@ -96,37 +125,56 @@
                                 </select>
                                 {invitableUsers.length === 0 && (
                                     <p className="text-xs text-muted-foreground">
-                                        Everyone is already a member of this workspace.
+                                        Everyone registered is already a member of this workspace.
                                     </p>
                                 )}
                             </Field>
-
+                        ) : (
                             <Field>
-                                <Label htmlFor="invite_role">Role</Label>
-                                <select
-                                    id="invite_role"
-                                    value={selectedRoleId}
-                                    onChange={(e) => setSelectedRoleId(e.target.value)}
+                                <Label htmlFor="invite_email">Email</Label>
+                                <Input
+                                    id="invite_email"
+                                    type="email"
+                                    placeholder="person@example.com"
+                                    value={manualEmail}
+                                    onChange={(e) => setManualEmail(e.target.value)}
                                     disabled={isLoading}
-                                    className="border rounded-md px-2 py-1"
-                                >
-                                    {INVITABLE_ROLES.map((r) => (
-                                        <option key={r.role_id} value={r.role_id}>{r.role_name}</option>
-                                    ))}
-                                </select>
+                                />
+                                <p className="text-xs text-muted-foreground">
+                                    They'll receive an email invite even if they don't have an account yet.
+                                </p>
                             </Field>
-                        </FieldGroup>
+                        )}
 
-                        {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
+                        <Field>
+                            <Label htmlFor="invite_role">Role</Label>
+                            <select
+                                id="invite_role"
+                                value={selectedRoleId}
+                                onChange={(e) => setSelectedRoleId(e.target.value)}
+                                disabled={isLoading}
+                                className="border rounded-md px-2 py-1"
+                            >
+                                {INVITABLE_ROLES.map((r) => (
+                                    <option key={r.role_id} value={r.role_id}>{r.role_name}</option>
+                                ))}
+                            </select>
+                        </Field>
+                    </FieldGroup>
 
-                        <DialogFooter>
-                            <DialogClose render={<Button type="button" variant="outline" disabled={isLoading}>Cancel</Button>} />
-                            <Button type="submit" disabled={isLoading || invitableUsers.length === 0}>
-                                {isLoading ? "Inviting" : "Invite Member"}
-                            </Button>
-                        </DialogFooter>
-                    </form>
-                </DialogContent>
-            </Dialog>
-        );
-    }
+                    {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
+
+                    <DialogFooter>
+                        <DialogClose render={<Button type="button" variant="outline" disabled={isLoading}>Cancel</Button>} />
+                        <Button
+                            type="submit"
+                            disabled={isLoading || (mode === "existing" && invitableUsers.length === 0)}
+                        >
+                            {isLoading ? "Inviting…" : "Invite Member"}
+                        </Button>
+                    </DialogFooter>
+                </form>
+            </DialogContent>
+        </Dialog>
+    );
+}

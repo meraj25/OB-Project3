@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import { useSearchParams } from "react-router";
+import { Link } from "react-router";
 
 
 
@@ -47,7 +48,7 @@ function SignupPage() {
 
     if(!validateuser()) return;
     try{
-         await registerUser({user_name: form.name ,user_email: form.email, user_password: form.password}).unwrap();
+         await registerUser({user_name: form.name ,user_email: form.email, user_password: form.password, }).unwrap();
          console.log("user Registered!")
 
          setSuccess(true)
@@ -88,10 +89,19 @@ function SignupPage() {
             <Button type="submit" disabled={isLoading}>
                 {isLoading ? "Registering" : "Register"}
             </Button>
-            <a className="text-sm text-muted-foreground hover:underline" href="/login">Already have an account?</a>
+            <Link
+              className="text-sm text-muted-foreground hover:underline"
+              to={`/login${redirect ? `?redirect=${encodeURIComponent(redirect)}` : ""}`}
+            >
+            Already have an account?
+            </Link>
           </div>
 
-          {success && (alert("User registered successfully"))}
+          {success && (
+          <p className="text-sm text-green-600 pt-2">
+            Registration successful! Please check your email to verify your account before logging in.
+          </p>
+          )}
         </form>
       </div>
     </main>

@@ -10,6 +10,7 @@ import {
     RequestPasswordReset,
     ResetPassword,
     GetUser } from "../controllers/users.controller";
+  import VerifyEmailController from "../controllers/verify_email.controller";
 
 import express from "express";
 import { validateToken } from "../middlewares/JWT.middleware";
@@ -57,6 +58,10 @@ UserRouter
     UserRouter
       .route("/password_reset/confirm")
       .post(ResetPassword)
+
+    UserRouter
+      .route("/verify-email/:token")
+      .get(VerifyEmailController)
 
     
 

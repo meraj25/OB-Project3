@@ -36,8 +36,15 @@ const baseQueryWithReauth = async (args , api , extraOptions) => {
     }
 
     } else {
-      api.dispatch(Api.util.resetApiState());
-      window.location.href = '/login';
+     
+      const path = window.location.pathname;
+      const isPublicPath = path === '/login' || path === '/register' || path.startsWith('/invites/');
+
+      if (!isPublicPath) {
+
+        api.dispatch(Api.util.resetApiState());
+        window.location.href = '/login';
+      }
     }
   }
 
@@ -140,6 +147,10 @@ export const Api = createApi({
             body: { token, newPassword }
         }),
         invalidatesTags: [{ type: 'User', id: 'LIST' }],
+    }),
+
+    verifyEmail: build.query({
+    query: (token) => `/users/verify-email/${token}`,
     }),
 
     getAllIssues: build.query({
@@ -497,5 +508,6 @@ export const {
     useCreateCommentMutation,
     useDeleteCommentMutation,
     useGetInviteDetailsQuery,
-    useDeclineWorkspaceInviteMutation
+    useDeclineWorkspaceInviteMutation,
+    useVerifyEmailQuery
  } = Api

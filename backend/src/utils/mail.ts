@@ -24,3 +24,16 @@ export async function sendWorkspaceInviteEmail(to: string, workspace_name: strin
     });
 
 }
+
+export async function sendVerificationEmail(to: string, verifyLink: string) {
+    await transporter.sendMail({
+        from: process.env.SMTP_FROM,
+        to,
+        subject: "Verify your email",
+        html: `
+            <p>Thanks for signing up! Please verify your email to activate your account.</p>
+            <p><a href="${verifyLink}">Click here to verify</a></p>
+            <p>This link expires in 24 hours.</p>
+        `,
+    });
+}
