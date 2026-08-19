@@ -89,6 +89,10 @@ const loginUser = async (data:{user_email:string;user_password:string}) => {
         throw new ValidationError("Please verify your email before logging in");
     }
 
+    if (!user.user_password) {
+        throw new ValidationError("This account uses Google sign-in. Please log in with Google.");
+    }
+
     let matchingUser = null;
 
     if(!user.user_password){
@@ -102,6 +106,10 @@ const loginUser = async (data:{user_email:string;user_password:string}) => {
 
     if (!matchingUser) {
     throw new ValidationError ("Invalid credentials")
+    }
+
+    if (!matchingUser.user_password) {
+    throw new ValidationError("This account uses Google sign-in. Please log in with Google.");
     }
 
     const accessToken = jwt.sign(
@@ -125,7 +133,7 @@ const UpdateUser = async (user_id: number , data: Partial<{user_name: string , u
     }
 
     try{
-        const user = await updateUser(user_id,data);
+        const user = await updateUser(user_id,data);    
         const { user_password, ...safeUser} = user;
         return safeUser;
 

@@ -10,6 +10,9 @@ import ProjectRouter from "./routes/projects.route";
 import IssueRouter from "./routes/issues.route";
 import WorkspaceRouter from "./routes/workspaces.route";
 import Block_issuesRouter from "./routes/block_issues.route";
+import OauthRouter from "./routes/oauth.route";
+import passport from "./utils/passport"
+
 
 
 
@@ -26,12 +29,15 @@ app.use(cookieParser());
 
 app.use(helmet());
 
+app.use(passport.initialize());
+
 app.use('/api/users',UserRouter);
 app.use('/api/workspaces',WorkspaceRouter);
 app.use('/api/projects', ProjectRouter);
 app.use('/api/issues', IssueRouter);
 app.use('/api/workspace_members', Workspace_MembersRouter);
 app.use('/api/block-issues',Block_issuesRouter);
+app.use('/api/auth',OauthRouter);
 
 app.use(globalErrorHandlingMiddleware);
 

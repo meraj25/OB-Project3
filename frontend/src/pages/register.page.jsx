@@ -85,6 +85,8 @@ function SignupPage() {
             <Input name="password" type="password" value={form.password} onChange={handleChange} placeholder="Please enter a password" />
           </div>
 
+          <a href="http://localhost:8000/api/auth/google">Sign up with Google</a>
+
           <div className="flex items-center justify-between pt-2">
             <Button type="submit" disabled={isLoading}>
                 {isLoading ? "Registering" : "Register"}

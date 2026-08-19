@@ -49,11 +49,13 @@ const handleSubmit = async (e) => {
          console.log("user loggedin successfully!") 
          setLoggedin(true);
          setTimeout(() => navigate(redirect || "/"), 4000) 
-    }catch(error){
-        console.log(error)
-        setErrors({ form: "Failed to create content. Try again." })
-
-    }    
+    }catch(error) {
+    console.log(error)
+    setErrors({
+        ...errors,
+        form: error?.data?.message ?? "Failed to log in. Try again."
+    })
+} 
 }
 
   return (
@@ -78,6 +80,14 @@ const handleSubmit = async (e) => {
               <p className="mt-1 text-xs text-red-500">{errors.user_password}</p>
             )}
           </div>
+
+          {errors.form && (
+          <p className="text-sm text-red-500">{errors.form}</p>
+          )}
+
+          <a href={`http://localhost:8000/api/auth/google${redirect ? `?redirect=${encodeURIComponent(redirect)}` : ""}`}>
+            Sign in with Google
+          </a>
 
           <div className="flex items-center justify-between pt-2">
             <Button type="submit" disabled={isLoading}>
