@@ -4,6 +4,7 @@ import {prisma} from "../db/prisma"
 const findOrCreateGoogleUser = async (profile: any) => {
     const email = profile.emails?.[0]?.value;
     const googleId = profile.id;
+    const photo = profile.photos?.[0]?.value; 
 
     if (!email) {
         throw new Error("Google account has no email");
@@ -20,7 +21,12 @@ const findOrCreateGoogleUser = async (profile: any) => {
     if (user) {
         return prisma.users.update({
             where: { user_id: user.user_id },
-            data: { auth_provider: "google", provider_id: googleId }
+            data: { 
+                auth_provider: "google", 
+                provider_id: googleId,
+                email_verified: true,
+                profile_picture: user.profile_picture ?? photo,
+             }
         });
     }
 
@@ -32,6 +38,7 @@ const findOrCreateGoogleUser = async (profile: any) => {
             user_password: null,
             auth_provider: "google",
             provider_id: googleId,
+            profile_picture: photo,
         }
     });
 };

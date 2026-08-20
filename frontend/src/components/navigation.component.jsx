@@ -2,14 +2,12 @@ import { Button } from "@/components/ui/button";
 import { Link } from "react-router";
 import { useLogoutUserMutation } from "@/lib/api";
 import { socket } from "@/lib/socket";
-
+import ProfilePictureUpload from "./pictureUpload.component";
 
 
 export default function Navigation({ user }) {
 
   const [logoutUser] = useLogoutUserMutation();
-
-  console.log(user)
 
   const handleLogout = async () => {
     try {
@@ -28,7 +26,6 @@ export default function Navigation({ user }) {
           Task dashboard
         </p>
         <div>
-          
           <p className="max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base">
             Solve the Issues
           </p>
@@ -37,8 +34,9 @@ export default function Navigation({ user }) {
 
       <div className="flex flex-wrap gap-3 items-center">
         {user ? (
-          <div className="flex ">
-            <p className="text-sm font-medium mr-5 mt-1">
+          <div className="flex items-center gap-3">
+            <ProfilePictureUpload user={user} size="sm" />
+            <p className="text-sm font-medium">
               Welcome back, {user.user_name}
             </p>
             <Button onClick={handleLogout}>

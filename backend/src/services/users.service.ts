@@ -226,6 +226,16 @@ const resetPassword = async (rawToken:string, newPassword:string) => {
 
 }
 
+const updateProfilePicture = async (user_id: number, filePath: string) => {
+    const user = await prisma.users.update({
+        where: { user_id },
+        data: { profile_picture: filePath },
+    });
+
+    const { user_password, ...safeUser } = user;
+    return safeUser;
+};
+
 export {
     getAllUsers,
     getUserById,
@@ -236,7 +246,8 @@ export {
     issueRefreshToken,
     rotateRefreshToken,
     requestPasswordReset,
-    resetPassword
+    resetPassword,
+    updateProfilePicture
 
 
 }

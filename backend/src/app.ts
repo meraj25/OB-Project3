@@ -12,6 +12,7 @@ import WorkspaceRouter from "./routes/workspaces.route";
 import Block_issuesRouter from "./routes/block_issues.route";
 import OauthRouter from "./routes/oauth.route";
 import passport from "./utils/passport"
+import path from "path";
 
 
 
@@ -38,7 +39,10 @@ app.use('/api/issues', IssueRouter);
 app.use('/api/workspace_members', Workspace_MembersRouter);
 app.use('/api/block-issues',Block_issuesRouter);
 app.use('/api/auth',OauthRouter);
-
+app.use("/uploads", (req, res, next) => {
+    res.setHeader("Cross-Origin-Resource-Policy", "cross-origin");
+    next();
+}, express.static(path.join(__dirname, "../uploads")));
 app.use(globalErrorHandlingMiddleware);
 
 

@@ -15,6 +15,8 @@ import {
 import express from "express";
 import { validateToken } from "../middlewares/JWT.middleware";
 import {loginLimiter,passwordResetLimiter} from "../middlewares/rateLimiters.middleware"
+import { uploadProfilePicture } from "../middlewares/upload.middleware";
+import { UpdateProfilePictureController } from "../controllers/users.controller";
 
 
 const UserRouter = express.Router();
@@ -44,6 +46,15 @@ UserRouter
       .route("/getuser")
       .get(validateToken,GetUser)
 
+    UserRouter
+      .route("/profile-picture")
+      .patch(
+        validateToken,
+        (req, res, next) => { console.log("REACHED: before multer"); next(); },
+        uploadProfilePicture,
+        (req, res, next) => { console.log("REACHED: after multer", req.file); next(); },
+        UpdateProfilePictureController)
+
 
     UserRouter
       .route("/:id")
@@ -64,7 +75,6 @@ UserRouter
       .get(VerifyEmailController)
 
     
-
 
       export default UserRouter;
     

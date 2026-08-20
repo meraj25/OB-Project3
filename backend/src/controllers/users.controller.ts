@@ -12,8 +12,10 @@ import {
  import e, { Request,Response,NextFunction } from "express";
  import ValidationError from "../domain/errors/validation-error";
  import UnauthorizedError from "../domain/errors/unauthorized-error";
+ import NotFoundError from "../domain/errors/not-found-error";
  import * as jwt from "jsonwebtoken";
-import { error } from "node:console";
+import { updateProfilePicture } from "../services/users.service";
+import {prisma} from "../db/prisma"
 
 
  
@@ -224,9 +226,36 @@ const ResetPassword = async (req:Request, res:Response, next:NextFunction) => {
 }
 
 
-const GetUser = async(req:Request, res: Response) => {
-res.status(200).json({user: req.user})
-}
+const GetUser = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const user = await prisma.users.findUnique({
+            where: { user_id: req.user.user_id },
+        });
+
+        if (!user) throw new NotFoundError("User not found");
+
+        const { user_password, ...safeUser } = user;
+        res.status(200).json({ user: safeUser });
+    } catch (error) {
+        next(error);
+    }
+};
+
+
+const UpdateProfilePictureController = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        if (!req.file) {
+            throw new ValidationError("No file uploaded");
+        }
+
+        const filePath = `/uploads/profile-pictures/${req.file.filename}`;
+        const user = await updateProfilePicture(req.user.user_id, filePath);
+
+        res.status(200).json(user);
+    } catch (error) {
+        next(error);
+    }
+};
 
 export {
     LoginUser,
@@ -239,5 +268,6 @@ export {
     RefreshUser,
     GetUser,
     RequestPasswordReset,
-    ResetPassword
+    ResetPassword,
+    UpdateProfilePictureController
 }

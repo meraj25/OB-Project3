@@ -115,6 +115,19 @@ export const Api = createApi({
       providesTags: [{ type: 'User', id: 'CURRENT' }],
     }),
 
+    updateProfilePicture: build.mutation({
+    query: (file) => {
+        const formData = new FormData();
+        formData.append("profile_picture", file);
+        return {
+            url: "/users/profile-picture",
+            method: "PATCH",
+            body: formData,
+        };
+    },
+    invalidatesTags: [{ type: 'User', id: 'CURRENT' }],
+    }),
+
     refreshUser: build.mutation({
       query: () => ({
         url: '/users/refresh',
@@ -509,5 +522,6 @@ export const {
     useDeleteCommentMutation,
     useGetInviteDetailsQuery,
     useDeclineWorkspaceInviteMutation,
-    useVerifyEmailQuery
+    useVerifyEmailQuery,
+    useUpdateProfilePictureMutation
  } = Api
